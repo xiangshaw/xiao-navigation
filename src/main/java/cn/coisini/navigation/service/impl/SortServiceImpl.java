@@ -4,10 +4,9 @@ import cn.coisini.navigation.mapper.SortMapper;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.model.pojos.Sort;
-import cn.coisini.navigation.model.vo.SortQueryVo;
+import cn.coisini.navigation.model.vo.QueryVo;
 import cn.coisini.navigation.service.SortService;
 import cn.coisini.navigation.utils.IdWorker;
-import cn.coisini.navigation.utils.PageUtils;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -41,9 +40,9 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
 
     // 查询所有类别
     @Override
-    public Result<Sort> qbcSort(SortQueryVo sortQueryVo) {
+    public Result<Sort> qbcSort(QueryVo queryVo) {
         // 获取条件
-        String sortName = sortQueryVo.getSortName();
+        String sortName = queryVo.getKeyword();
         // 封装条件
         QueryWrapper<Sort> wrapper = new QueryWrapper<>();
         // 根据 类别名称 模糊查询
@@ -51,14 +50,17 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
             wrapper.like("sort_name", sortName);
         }
         // 排序
-        wrapper.orderByDesc("sort_id");
-        // 分页条件
-        Page<Sort> page = new Page<>(sortQueryVo.getCurrent(), sortQueryVo.getLimit());
+        wrapper.eq("status",0).orderByDesc("sort_id");
+        // 分页条件 当前页-每页条数
+        Page<Sort> page = new Page<>(queryVo.getCurrent(), queryVo.getLimit());
         Page<Sort> sortPage = page(page, wrapper);
+        // 总条数
+        sortPage.setTotal(sortPage.getRecords().size());
         // 返回结果
-        return Result.ok(new PageUtils(sortPage));
+        return Result.ok(sortPage);
     }
 
+    // 新增类别
     @Override
     public Result<Sort> saveSort(Sort sort) {
         // 1.检查参数

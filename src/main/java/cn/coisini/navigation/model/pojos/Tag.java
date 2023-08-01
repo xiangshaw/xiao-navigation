@@ -8,24 +8,32 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.util.Date;
 
 /**
  * Author: xiaoxiang
- * Description: 类别 - 实体类
+ * Description: 标签 - 实体类
  */
 @Data
-@TableName("sort")
-@ApiModel(value = "Sort", description = "类别")
-public class Sort implements Serializable {
-    @ApiModelProperty(value = "类别ID", required = true, example = "7072624308312477713")
-    @TableId("sort_id")
-    private String sortId;
-    @ApiModelProperty(value = "类别名",required = true)
-    @TableField("sort_name")
-    private String sortName;
-    @ApiModelProperty("类别描述")
+@TableName("tag")
+@ApiModel(value = "Tag", description = "标签")
+public class Tag implements Serializable {
+    @ApiModelProperty(value = "标签ID", required = true, example = "7072624308312477713")
+    @TableId("tag_id")
+    private String tagId;
+    @ApiModelProperty(value = "标签名", required = true)
+    @TableField("tag_name")
+    @NotEmpty(message = "标签名不能为空")
+    private String tagName;
+    @ApiModelProperty("标签图标")
+    @TableField("tag_icon")
+    private String tagIcon;
+    @ApiModelProperty("标签地址")
+    @TableField("tag_url")
+    private String tagUrl;
+    @ApiModelProperty("标签描述")
     @TableField("description")
     private String description;
     @ApiModelProperty("排序")
@@ -34,11 +42,11 @@ public class Sort implements Serializable {
     @ApiModelProperty("类别状态 0正常 1禁用")
     @TableField("status")
     private Boolean status;
-    @ApiModelProperty("类别创建时间")
+    @ApiModelProperty("标签创建时间")
     @TableField("create_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date createTime;
-    @ApiModelProperty("类别修改时间")
+    @ApiModelProperty("标签修改时间")
     @TableField("update_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date updateTime;

@@ -39,7 +39,7 @@ public class Knife4j {
         pars.add(tokenPar.build());
         //添加head参数end
 
-        Docket adminApi = new Docket(DocumentationType.SWAGGER_2)
+        return new Docket(DocumentationType.SWAGGER_2)
                 .groupName("Api")
                 .apiInfo(adminApiInfo())
                 .select()
@@ -49,7 +49,6 @@ public class Knife4j {
                 .paths(PathSelectors.any())
                 .build()
                 .globalOperationParameters(pars);
-        return adminApi;
     }
 
     private ApiInfo adminApiInfo(){
