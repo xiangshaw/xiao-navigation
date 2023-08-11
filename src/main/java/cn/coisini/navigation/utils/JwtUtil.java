@@ -19,7 +19,7 @@ public class JwtUtil {
     private static final int REFRESH_TIME = 300;
 
     // 生产ID(创建token)
-    public static String getToken(Long userId, String username){
+    public static String getToken(String userId, String username){
         Map<String, Object> claimMaps = new HashMap<>();
         claimMaps.put("userId",userId);
         claimMaps.put("username",username);
@@ -90,11 +90,11 @@ public class JwtUtil {
      * @param token
      * @return
      */
-    public static Long getUserId(String token) {
+    public static String getUserId(String token) {
         try {
             if (StringUtils.isEmpty(token)) return null;
-            Integer userId = (Integer) getJws(token).getBody().get("userId");
-            return userId.longValue();
+            String userId = (String) getJws(token).getBody().get("userId");
+            return userId;
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -141,12 +141,12 @@ public class JwtUtil {
     //测试
     public static void main(String[] args) {
         // 生成带id的jwt字符串
-        //String token = JwtUtil.getToken(1L, "coisini");
-        String token = "eyJhbGciOiJIUzUxMiIsInppcCI6IkdaSVAifQ.H4sIAAAAAAAAAE2LSw7CMAwF7-J1I5GfCb0Bx3ASL4LagnAigRB3x3wW7N680Tzg1BvM4FKJOaE1h-qLCZzZUEIy-6Bn9R5LjjBBow6zxeRidLgLE8jIWstdOq9vL6JYzk3a1pRpVGVaFt18u3xatL92CF-P6u13brTyX_x8AWae3UebAAAA.kPDbvysBpsUJOBAcJVSEl6A9y1PxUEbVGoJLy45nFE3jpr0kyiX1KPtyZ7kVoALv3YIShCg6d5IzjA6Ih_19Ew";
+        String token = JwtUtil.getToken("916", "coisini");
+       // String token = "eyJhbGciOiJIUzUxMiIsInppcCI6IkdaSVAifQ.H4sIAAAAAAAAAE2LSw7CMAwF7-J1I5GfCb0Bx3ASL4LagnAigRB3x3wW7N680Tzg1BvM4FKJOaE1h-qLCZzZUEIy-6Bn9R5LjjBBow6zxeRidLgLE8jIWstdOq9vL6JYzk3a1pRpVGVaFt18u3xatL92CF-P6u13brTyX_x8AWae3UebAAAA.kPDbvysBpsUJOBAcJVSEl6A9y1PxUEbVGoJLy45nFE3jpr0kyiX1KPtyZ7kVoALv3YIShCg6d5IzjA6Ih_19Ew";
         System.out.println(token);
         String username = getUsername(token);
         System.out.println(username);
-        Long userId = getUserId(token);
+        String userId = getUserId(token);
         System.out.println(userId);
 
         // 解析生成的jwt字符串
