@@ -9,7 +9,9 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Author: xiaoxiang
@@ -21,7 +23,7 @@ import java.util.Date;
 public class Sort implements Serializable {
     @ApiModelProperty(value = "类别ID", required = true, example = "7072624308312477713")
     @TableId("sort_id")
-    private String sortId;
+    private String id;
     @ApiModelProperty(value = "类别名",required = true)
     @TableField("sort_name")
     private String sortName;
@@ -42,5 +44,8 @@ public class Sort implements Serializable {
     @TableField("update_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date updateTime;
+    @ApiModelProperty("类别下的标签")
+    @TableField(exist = false)
+    private List<Tag> tags = new ArrayList<>();
 }
 

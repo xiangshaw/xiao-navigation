@@ -82,7 +82,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     public Result<Tag> saveTag(Tag tag) {
         // 1.检查参数
-        if (tag == null) {
+        if (tag.getTagName() == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.查询数据库

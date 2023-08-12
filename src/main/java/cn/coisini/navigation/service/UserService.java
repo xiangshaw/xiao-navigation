@@ -21,10 +21,10 @@ public interface UserService extends IService<User> {
     Result<User> getUserId(String id);
 
     // 保存用户
-    Result<User> saveUser(User navigationUser);
+    Result<User> saveUser(User user);
 
     // 修改用户
-    Result<User> updateUser(User navigationUser);
+    Result<User> updateUser(User user);
 
     // 删除用户
     Result<User> removeUser(String id);

@@ -58,7 +58,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (CharSequenceUtil.isNotBlank(userQueryVo.getKeyword())) {
             wrapper.and(x -> x.like("username", keyword)
                     .or()
-                    .like("name", keyword)
+                    .like("nickname", keyword)
                     .or()
                     .like("phone", keyword));
         }
@@ -72,11 +72,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         wrapper.eq("del_flag", 0).orderByDesc("id");
         // 分页条件 当前页-每页条数
         Page<User> page = new Page<>(userQueryVo.getCurrent(), userQueryVo.getLimit());
-        Page<User> navigationUserPage = page(page, wrapper);
+        Page<User> userPage = page(page, wrapper);
         // 总条数
-        navigationUserPage.setTotal(navigationUserPage.getRecords().size());
+        userPage.setTotal(userPage.getRecords().size());
         // 返回结果
-        return Result.ok(navigationUserPage);
+        return Result.ok(userPage);
     }
 
     // 根据Id获取用户
@@ -85,28 +85,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (id == null) {
             return Result.error(ResultEnum.PARAM_REQUIRE);
         }
-        User navigationUser = getById(id);
-        if (navigationUser == null) {
+        User user = getById(id);
+        if (user == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
-        return Result.ok(navigationUser);
+        return Result.ok(user);
     }
 
     // 保存用户
     @Override
-    public Result<User> saveUser(User navigationUser) {
+    public Result<User> saveUser(User user) {
         // 1.检查参数
-        if (navigationUser == null) {
+        if (user.getUsername() == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.查询数据库
-        List<User> list = list(Wrappers.<User>lambdaQuery().eq(User::getUsername, navigationUser.getUsername()));
+        List<User> list = list(Wrappers.<User>lambdaQuery().eq(User::getUsername, user.getUsername()));
         if (list != null && list.size() == 1) {
             return Result.error(ResultEnum.DATA_EXIST, "该用户名已经注册");
         }
         // 3.输入的密码进行BCryptPasswordEncoder加密
-        navigationUser.setPassword(new BCryptPasswordEncoder().encode(navigationUser.getPassword()));
-        boolean b = save(navigationUser);
+        user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
+        boolean b = save(user);
         if (b) {
             return Result.ok(ResultEnum.SUCCESS);
         }
@@ -115,13 +115,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 修改用户
     @Override
-    public Result<User> updateUser(User navigationUser) {
+    public Result<User> updateUser(User user) {
         // 1.检查参数
-        if (navigationUser == null) {
+        if (user == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.修改并判断结果
-        boolean b = updateById(navigationUser);
+        boolean b = updateById(user);
         if (b) {
             return Result.ok(ResultEnum.SUCCESS);
         }
@@ -136,8 +136,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.判断当前角色是否存在
-        User navigationUser = getById(id);
-        if (navigationUser == null) {
+        User user = getById(id);
+        if (user == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
         // 3.删除并判断结果
@@ -156,12 +156,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.根据用户id查询
-        User navigationUser = getById(id);
+        User user = getById(id);
         // 3.设置状态值
-        navigationUser.setStatus(status);
-        navigationUser.setUpdateTime(new Date());
+        user.setStatus(status);
+        user.setUpdateTime(new Date());
         //  4.修改并判断结果
-        boolean b = updateById(navigationUser);
+        boolean b = updateById(user);
         if (b) {
             return Result.ok(ResultEnum.SUCCESS);
         }

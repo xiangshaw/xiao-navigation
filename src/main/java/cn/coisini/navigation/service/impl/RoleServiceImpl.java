@@ -65,7 +65,7 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
     @Override
     public Result<Role> saveRole(Role role) {
         // 1.检查参数
-        if (role == null) {
+        if (role.getRoleName() == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.查询数据库

@@ -36,12 +36,12 @@ import java.util.concurrent.TimeUnit;
 @RequestMapping("/api/v1/index")
 @Log4j2
 public class UserLoginController {
-    private final UserService navigationUserService;
+    private final UserService userService;
     private final StringRedisTemplate stringRedisTemplate;
     private final Producer producer;
 
-    public UserLoginController(UserService navigationUserService, StringRedisTemplate stringRedisTemplate, Producer producer) {
-        this.navigationUserService = navigationUserService;
+    public UserLoginController(UserService userService, StringRedisTemplate stringRedisTemplate, Producer producer) {
+        this.userService = userService;
         this.stringRedisTemplate = stringRedisTemplate;
         this.producer = producer;
     }
@@ -54,7 +54,7 @@ public class UserLoginController {
         String token = request.getHeader("token");
         String userId = JwtUtil.getUserId(token);
         String username = JwtUtil.getUsername(token);
-        Map<String, Object> map = navigationUserService.getUserInfo(userId, username);
+        Map<String, Object> map = userService.getUserInfo(userId, username);
         return Result.ok(map);
     }
 
@@ -84,8 +84,8 @@ public class UserLoginController {
 
     @ApiOperation("用户注册")
     @PostMapping("/register")
-    public Result<User> registerUser(@RequestBody User navigationUser) {
-        return navigationUserService.registerUser(navigationUser);
+    public Result<User> registerUser(@RequestBody User user) {
+        return userService.registerUser(user);
     }
 
     // 登录交给Spring Security管理
@@ -100,23 +100,23 @@ public class UserLoginController {
             return Result.error(ResultEnum.SECURITY_CODE_ERROR);
         }
         // 根据username查询数据
-        User navigationUser = navigationUserService.getUserInfoByName(loginVo.getUsername());
+        User user = userService.getUserInfoByName(loginVo.getUsername());
         // 如果查询为空
-        if (navigationUser == null) {
+        if (user == null) {
             throw new CoisiniException(ResultEnum.PARAM_INVALID);
         }
         // 判断密码是否一致（加密后进行数据库密码比较）
         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        if (bCryptPasswordEncoder.encode(loginVo.getPassword()).equals(navigationUser.getPassword())) {
+        if (bCryptPasswordEncoder.encode(loginVo.getPassword()).equals(user.getPassword())) {
             throw new CoisiniException(ResultEnum.LOGIN_PASSWORD_ERROR);
         }
         // 判断用户是否可用（0正常 1禁用）
-        if (Boolean.FALSE.equals(navigationUser.getStatus())) {
+        if (Boolean.FALSE.equals(user.getStatus())) {
             throw new CoisiniException(ResultEnum.ACCOUNT_STOP);
         }
         // 根据userId和username生成token字符串，通过map返回
         Map<String, Object> map = new HashMap<>();
-        String token = JwtUtil.getToken(navigationUser.getId(), navigationUser.getUsername());
+        String token = JwtUtil.getToken(user.getId(), user.getUsername());
         map.put("token", token);
         log.info("map中的token：" + token);
         return Result.ok(map);
