@@ -181,7 +181,7 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         if (id == null && status == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
-        // 2.根据岗位id查询
+        // 2.根据类别id查询
         Sort sort = getById(id);
         if (sort == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);

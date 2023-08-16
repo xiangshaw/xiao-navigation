@@ -55,3 +55,6 @@ datacenterId: 0
 # 启动类打印接口地址
 ipaddr: http://localhost
 
+# 拼接 FastDfs 地址
+fdfs.url: http://192.168.20.128/
+

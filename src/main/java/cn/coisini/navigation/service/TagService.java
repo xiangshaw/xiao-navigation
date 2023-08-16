@@ -7,6 +7,7 @@ import cn.coisini.navigation.model.vo.QueryVo;
 import cn.coisini.navigation.model.vo.SortTagVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +25,11 @@ public interface TagService extends IService<Tag> {
     Result<Tag> updateTag(Tag tag);
     // 标签删除
     Result<Tag> removeTag(String id);
+    // 类别批量删除
+    // json数组格式 ---对应---Java的list集合
+    Result<List<Tag>> batchRemove(List<String> ids);
+    // 修改类别状态（0正常 1禁用）
+    Result<Tag>  updateStatus(String id, Boolean status);
 
     // === 类别和标签关系===
     // 根据标签id获取类别信息
