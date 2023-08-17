@@ -12,6 +12,7 @@ import cn.coisini.navigation.model.vo.QueryVo;
 import cn.coisini.navigation.model.vo.SortTagVo;
 import cn.coisini.navigation.model.vo.TagVo;
 import cn.coisini.navigation.service.TagService;
+import cn.coisini.navigation.utils.FastDfsClient;
 import cn.coisini.navigation.utils.IdWorker;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -35,10 +36,12 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     private final SortTagMapper sortTagMapper;
     private final SortMapper sortMapper;
+    private final FastDfsClient fastDfsClient;
 
-    public TagServiceImpl(SortTagMapper sortTagMapper,SortMapper sortMapper) {
+    public TagServiceImpl(SortTagMapper sortTagMapper, SortMapper sortMapper, FastDfsClient fastDfsClient) {
         this.sortTagMapper = sortTagMapper;
         this.sortMapper = sortMapper;
+        this.fastDfsClient = fastDfsClient;
     }
 
     // 根据ID查询标签
@@ -139,8 +142,12 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
 
-        if (Boolean.TRUE.equals(tag.getStatus())){
+        if (Boolean.FALSE.equals(tag.getStatus())){
             return Result.error(ResultEnum.FAIL,"标签有效，不能删除");
+        }
+        // 先删除图标
+        if (tag.getTagIcon() != null){
+            fastDfsClient.delFile(delIconUrl(tag.getTagIcon()));
         }
         // 2.执行删除并检查结果
         boolean b = removeById(id);
@@ -168,7 +175,15 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             Object sortName = tagStatusIds.get("sortName");
             return Result.error(ResultEnum.FAIL, "删除标签失败：" + sortName + "有效！");
         }
-        // 4. 删除操作
+        // 4. 遍历tagList并处理tagIcon字段
+        for (Tag tag : tagList) {
+            String tagIcon = tag.getTagIcon();
+            if (tagIcon != null && !tagIcon.isEmpty()) {
+                // 删除文件
+                fastDfsClient.delFile(delIconUrl(tagIcon));
+            }
+        }
+        // 5. 删除操作
         boolean removeByIds = removeByIds(ids);
         if (removeByIds) {
             return Result.ok(ResultEnum.SUCCESS);
@@ -199,19 +214,19 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         return Result.error(ResultEnum.FAIL, "修改失败");
     }
 
-    // 根据标签Id获取标签数据
+    // 根据标签Id获取类别数据
     @Override
     public Result<Map<String, Object>> getSortsByTagId(String id) {
         // 1.检查参数
         if (id == null){
             return Result.error(ResultEnum.PARAM_INVALID);
         }
-        // 2.获取所有标签
+        // 2.获取所有类别
         List<Sort> sortList = sortMapper.selectList(null);
-        // 3.根据标签id查询已经关联的标签
-        List<SortTag> tagList = sortTagMapper.selectList(new QueryWrapper<SortTag>().eq("tag_id", id));
-        // 4.获取所有标签id
-        List<String> sortIds = tagList.stream().map(SortTag::getSortId).collect(Collectors.toList());
+        // 3.根据标签id查询已经关联的类别
+        List<SortTag> tagSortList = sortTagMapper.selectList(new QueryWrapper<SortTag>().eq("tag_id", id));
+        // 4.获取所有类别id
+        List<String> sortIds = tagSortList.stream().map(SortTag::getSortId).collect(Collectors.toList());
         // 5.封装到map
         HashMap<String, Object> map = new HashMap<>();
         // 5.1所有标签
@@ -221,16 +236,16 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         return Result.ok(map);
     }
 
-    // 新增标签与标签
+    // 新增标签与类别
     @Override
     public Result<SortTag> saveSortTag(SortTagVo sortTagVo) {
         // 1.检查参数
         if (sortTagVo.getTagId() == null){
             return Result.error(ResultEnum.PARAM_INVALID);
         }
-        // 2.根据标签id删除原来分配的标签
+        // 2.根据标签id删除原来分配的类别
         sortTagMapper.delete(new QueryWrapper<SortTag>().eq("tag_id", sortTagVo.getTagId()));
-        // 3.获取所有标签id,添加标签标签关系表
+        // 3.获取所有标签id,添加标签类别关系表
         List<String> sortIdList = sortTagVo.getSortIdList();
         sortIdList.forEach(sortId ->{
             SortTag sortTag = new SortTag();
@@ -269,5 +284,16 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         map.put("tagName", tagNames);
         // 返回包含标志位和标签名称的 Map
         return map;
+    }
+    // 删除图标地址
+    private String delIconUrl(String tagIcon) {
+        // 找到 "group" 在 tagIcon 中的位置
+        int startIndex = tagIcon.indexOf("group");
+        if (startIndex != -1) {
+            // 截取 "group" 后面的部分
+            return tagIcon.substring(startIndex);
+        } else {
+            return tagIcon;
+        }
     }
 }

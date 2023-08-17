@@ -65,7 +65,7 @@ public class TagController {
     }
 
     @PreAuthorize("hasAuthority('tag:batchRemove')")
-    @ApiOperation("批量删除类别")
+    @ApiOperation("批量删除标签")
     @DeleteMapping("/batchRemove")
     public Result<List<Tag>> batchRemoveRole(@RequestBody List<String> ids) {
         return tagService.batchRemove(ids);
@@ -73,7 +73,7 @@ public class TagController {
 
     @PreAuthorize("hasAuthority('tag:status')")
     @GetMapping("/updateStatus/{id}/{status}")
-    @ApiOperation("更改类别状态(0启用 1禁用)")
+    @ApiOperation("更改标签状态(0启用 1禁用)")
     public Result<Tag> status(@PathVariable("id") String id,
                                @PathVariable("status") Boolean status) {
         return tagService.updateStatus(id, status);

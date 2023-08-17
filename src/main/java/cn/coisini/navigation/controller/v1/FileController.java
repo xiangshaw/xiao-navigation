@@ -4,10 +4,7 @@ import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.utils.FastDfsClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -16,6 +13,7 @@ import java.io.IOException;
  * Author: xiaoxiang
  * Description: 文件上传
  */
+@CrossOrigin
 @RestController
 @RequestMapping("/api/v1/file")
 public class FileController {
