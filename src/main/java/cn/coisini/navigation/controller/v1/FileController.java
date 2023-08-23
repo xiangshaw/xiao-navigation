@@ -35,8 +35,13 @@ public class FileController {
                 throw new IllegalArgumentException("文件不存在");
             }
             String fileId = fastDfsClient.uploadFile(file);
-            // http://192.168.20.128/group1/M00/00/00/wKgUgGTdAg-AKc1bAALxXtyM8xw319.ico
-            return Result.ok(fileServerUrl + fileId);
+            // 只存路径
+            Result<String> result = new Result<>();
+            // http://192.168.20.128/
+            result.setHost(fileServerUrl);
+            // group1/M00/00/00/wKgUgGTdAg-AKc1bAALxXtyM8xw319.ico
+            result.setData(fileId);
+            return result;
         } catch (IOException e) {
             e.printStackTrace();
             return Result.error(ResultEnum.FAIL, "文件上传失败");

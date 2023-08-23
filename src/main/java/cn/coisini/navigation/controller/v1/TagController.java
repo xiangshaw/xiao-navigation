@@ -33,34 +33,34 @@ public class TagController {
 
     @GetMapping("/{id}")
     @ApiOperation("根据Id查询标签")
-    Result<Tag> findIdByTag(@ApiParam("标签Id") @PathVariable("id") String id){
+    Result<Tag> findIdByTag(@ApiParam("标签Id") @PathVariable("id") String id) {
         return tagService.findIdByTag(id);
     }
 
     @GetMapping("/list")
     @ApiOperation("查询所有标签")
-    public Result<Tag> qbcTag(QueryVo tagQueryVo){
+    public Result<Object> qbcTag(QueryVo tagQueryVo) {
         return tagService.qbcTag(tagQueryVo);
     }
 
     @PreAuthorize("hasAuthority('tag:add')")
     @PostMapping("/save")
     @ApiOperation("保存标签")
-    public Result<Tag> saveTag(@RequestBody @Validated Tag tag){
+    public Result<Tag> saveTag(@RequestBody @Validated Tag tag) {
         return tagService.saveTag(tag);
     }
 
     @PreAuthorize("hasAuthority('tag:update')")
     @PatchMapping("/update")
     @ApiOperation("更新标签")
-    public Result<Tag> updateTag(@RequestBody Tag tag){
+    public Result<Tag> updateTag(@RequestBody Tag tag) {
         return tagService.updateTag(tag);
     }
 
     @PreAuthorize("hasAuthority('tag:remove')")
     @DeleteMapping("/remove/{id}")
     @ApiOperation("删除标签")
-    public Result<Tag> removeTag(@ApiParam("标签Id") @PathVariable("id") String id){
+    public Result<Tag> removeTag(@ApiParam("标签Id") @PathVariable("id") String id) {
         return tagService.removeTag(id);
     }
 
@@ -75,8 +75,15 @@ public class TagController {
     @GetMapping("/updateStatus/{id}/{status}")
     @ApiOperation("更改标签状态(0启用 1禁用)")
     public Result<Tag> status(@PathVariable("id") String id,
-                               @PathVariable("status") Boolean status) {
+                              @PathVariable("status") Boolean status) {
         return tagService.updateStatus(id, status);
+    }
+
+    @GetMapping("/updateTagIcon/{tagId}/{tagIcon}")
+    @ApiOperation("单独更改标签图标")
+    Result<Tag> updateTagIcon(@PathVariable("tagId") String tagId,
+                              @PathVariable("tagIcon") String tagIcon) {
+        return tagService.updateTagIcon(tagId, tagIcon);
     }
 
     @ApiOperation("根据标签id获取类别信息数据")
@@ -84,6 +91,7 @@ public class TagController {
     public Result<Map<String, Object>> getRolesByUserId(@PathVariable("id") String id) {
         return tagService.getSortsByTagId(id);
     }
+
     @PreAuthorize("hasAuthority('tag:assignSort')")
     @ApiOperation("给标签分配类别")
     @PostMapping("/doAssign")

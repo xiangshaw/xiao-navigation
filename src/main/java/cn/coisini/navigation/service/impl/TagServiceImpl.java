@@ -16,9 +16,11 @@ import cn.coisini.navigation.utils.FastDfsClient;
 import cn.coisini.navigation.utils.IdWorker;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -38,6 +40,9 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     private final SortMapper sortMapper;
     private final FastDfsClient fastDfsClient;
 
+    @Value("${fdfs.url}")
+    private String fileServerUrl;
+
     public TagServiceImpl(SortTagMapper sortTagMapper, SortMapper sortMapper, FastDfsClient fastDfsClient) {
         this.sortTagMapper = sortTagMapper;
         this.sortMapper = sortMapper;
@@ -48,12 +53,12 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     public Result<Tag> findIdByTag(String id) {
         // 1.检查参数
-        if (id == null){
+        if (id == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         Tag tag = getById(id);
         // 检查结果
-        if (tag == null){
+        if (tag == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
         return Result.ok(tag);
@@ -61,7 +66,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
 
     // 查询所有标签
     @Override
-    public Result<Tag> qbcTag(QueryVo queryVo) {
+    public Result<Object> qbcTag(QueryVo queryVo) {
         // 获取条件
         String tagName = queryVo.getKeyword();
         // 封装条件
@@ -71,14 +76,17 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             wrapper.like("tag_name", tagName);
         }
         // 排序
-        wrapper.eq("status",0).orderByDesc("tag_id");
+        wrapper.orderByDesc("tag_id");
         // 分页条件 当前页-每页条数
         Page<Tag> page = new Page<>(queryVo.getCurrent(), queryVo.getLimit());
         Page<Tag> tagPage = page(page, wrapper);
         // 总条数
         tagPage.setTotal(tagPage.getRecords().size());
+        Result<Object> result = new Result<>();
+        result.setHost(fileServerUrl);
+        result.setData(tagPage);
         // 返回结果
-        return Result.ok(tagPage);
+        return result;
     }
 
     // 新增标签
@@ -99,7 +107,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         tag.setTagId(String.valueOf(worker.nextId()));
         tag.setCreateTime(new Date());
         boolean b = save(tag);
-        if (b){
+        if (b) {
             return Result.ok(ResultEnum.SUCCESS);
         }
         return Result.error(ResultEnum.FAIL, "标签添加失败");
@@ -109,15 +117,15 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     public Result<Tag> updateTag(Tag tag) {
         // 1.检查参数
-        if (tag == null && tag.getTagId() == null){
+        if (tag == null && tag.getTagId() == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.修改并检查结果
         boolean b = updateById(tag);
-        if (b){
+        if (b) {
             return Result.ok(ResultEnum.SUCCESS);
         }
-        return Result.error(ResultEnum.FAIL,"修改失败");
+        return Result.error(ResultEnum.FAIL, "修改失败");
     }
 
     /**
@@ -126,7 +134,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
      */
     private boolean updateTags(TagVo tagVo) {
         QueryWrapper<Tag> wrapper = new QueryWrapper<>();
-        wrapper.eq("tag_id",tagVo.getTagId());
+        wrapper.eq("tag_id", tagVo.getTagId());
         return updateById(wrapper.getEntity());
     }
 
@@ -134,27 +142,27 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     public Result<Tag> removeTag(String id) {
         // 1.检查参数
-        if (id == null){
+        if (id == null) {
             return Result.error(ResultEnum.PARAM_REQUIRE);
         }
         Tag tag = getById(id);
-        if (tag == null ){
+        if (tag == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
 
-        if (Boolean.FALSE.equals(tag.getStatus())){
-            return Result.error(ResultEnum.FAIL,"标签有效，不能删除");
+        if (Boolean.FALSE.equals(tag.getStatus())) {
+            return Result.error(ResultEnum.FAIL, "标签有效，不能删除");
         }
         // 先删除图标
-        if (tag.getTagIcon() != null){
+        if (tag.getTagIcon() != null) {
             fastDfsClient.delFile(delIconUrl(tag.getTagIcon()));
         }
         // 2.执行删除并检查结果
         boolean b = removeById(id);
-        if (b){
+        if (b) {
             return Result.ok(ResultEnum.SUCCESS);
         }
-        return Result.error(ResultEnum.FAIL,"删除失败");
+        return Result.error(ResultEnum.FAIL, "删除失败");
     }
 
     @Override
@@ -214,11 +222,35 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         return Result.error(ResultEnum.FAIL, "修改失败");
     }
 
+    // 单图标修改后 更新操作
+    @Override
+    public Result<Tag> updateTagIcon(String tagId, String tagIcon) {
+        // 参数检查
+        if (tagId == null || tagIcon == null) {
+            return Result.error(ResultEnum.FAIL, "图标更新失败，参数不完整");
+        }
+        // 查询标签是否存在
+        Tag tag = getById(tagId);
+        if (tag == null){
+            // 首次提交
+            return Result.ok("图标添加成功~");
+        }
+        // 下划线替换回斜杠
+        String icon = tagIcon.replace('_', '/');
+        // 更新标签图标
+        UpdateWrapper<Tag> wrapper = new UpdateWrapper<>();
+        wrapper.eq("tag_id", tagId);
+        wrapper.set("tag_icon", icon);
+        baseMapper.update(tag, wrapper);
+        return Result.ok(ResultEnum.SUCCESS);
+    }
+
+
     // 根据标签Id获取类别数据
     @Override
     public Result<Map<String, Object>> getSortsByTagId(String id) {
         // 1.检查参数
-        if (id == null){
+        if (id == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.获取所有类别
@@ -240,14 +272,14 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
     @Override
     public Result<SortTag> saveSortTag(SortTagVo sortTagVo) {
         // 1.检查参数
-        if (sortTagVo.getTagId() == null){
+        if (sortTagVo.getTagId() == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
         // 2.根据标签id删除原来分配的类别
         sortTagMapper.delete(new QueryWrapper<SortTag>().eq("tag_id", sortTagVo.getTagId()));
         // 3.获取所有标签id,添加标签类别关系表
         List<String> sortIdList = sortTagVo.getSortIdList();
-        sortIdList.forEach(sortId ->{
+        sortIdList.forEach(sortId -> {
             SortTag sortTag = new SortTag();
             sortTag.setId(String.valueOf(new IdWorker().nextId()));
             sortTag.setTagId(sortTagVo.getTagId());
@@ -285,6 +317,7 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         // 返回包含标志位和标签名称的 Map
         return map;
     }
+
     // 删除图标地址
     private String delIconUrl(String tagIcon) {
         // 找到 "group" 在 tagIcon 中的位置

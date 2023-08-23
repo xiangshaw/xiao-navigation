@@ -18,7 +18,7 @@ public interface TagService extends IService<Tag> {
     // 根据ID条件查询
     Result<Tag> findIdByTag(String id);
     // 标签条件查询
-    Result<Tag> qbcTag(QueryVo queryVo);
+    Result<Object> qbcTag(QueryVo queryVo);
     // 标签新增
     Result<Tag> saveTag(Tag tag);
     // 标签修改
@@ -30,6 +30,9 @@ public interface TagService extends IService<Tag> {
     Result<List<Tag>> batchRemove(List<String> ids);
     // 修改类别状态（0正常 1禁用）
     Result<Tag>  updateStatus(String id, Boolean status);
+    // 单图标修改后 更新操作
+    Result<Tag> updateTagIcon(String tagId, String tagIcon);
+
 
     // === 类别和标签关系===
     // 根据标签id获取类别信息
