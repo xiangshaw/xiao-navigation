@@ -246,7 +246,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPhone())) {
             return Result.error(ResultEnum.PARAM_REQUIRE, "用户名和手机号不能为空");
         } else {
-            user.setHeadUrl("");
+            user.setAvatar("");
             boolean b = save(user);
             if (b) {
                 return Result.ok(ResultEnum.SUCCESS);

@@ -27,7 +27,7 @@ public class TagVo {
     @ApiModelProperty("标签描述")
     private String description;
     @ApiModelProperty("排序")
-    private Integer ord;
+    private int ord;
     @ApiModelProperty("类别状态 0正常 1禁用")
     private Boolean status;
     @ApiModelProperty("标签创建时间")

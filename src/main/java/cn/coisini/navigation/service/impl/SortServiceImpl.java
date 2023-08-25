@@ -2,11 +2,14 @@ package cn.coisini.navigation.service.impl;
 
 import cn.coisini.navigation.mapper.SortMapper;
 import cn.coisini.navigation.mapper.SortTagMapper;
+import cn.coisini.navigation.mapper.TagMapper;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.model.pojos.Sort;
 import cn.coisini.navigation.model.pojos.SortTag;
+import cn.coisini.navigation.model.pojos.Tag;
 import cn.coisini.navigation.model.vo.QueryVo;
+import cn.coisini.navigation.model.vo.TagInfoVo;
 import cn.coisini.navigation.service.SortService;
 import cn.coisini.navigation.utils.IdWorker;
 import cn.hutool.core.text.CharSequenceUtil;
@@ -14,6 +17,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,9 +31,17 @@ import java.util.*;
 public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements SortService {
 
     private final SortTagMapper sortTagMapper;
+    private final SortMapper sortMapper;
+    private final TagMapper tagMapper;
 
-    public SortServiceImpl(SortTagMapper sortTagMapper) {
+    @Value("${fdfs.url}")
+    private String fileServerUrl;
+
+
+    public SortServiceImpl(SortTagMapper sortTagMapper, SortMapper sortMapper, TagMapper tagMapper) {
         this.sortTagMapper = sortTagMapper;
+        this.sortMapper = sortMapper;
+        this.tagMapper = tagMapper;
     }
 
     // 根据ID查询类别
@@ -251,5 +263,98 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         map.put("sortName", sortNames);
         // 返回包含标志位和类别名称的 Map
         return map;
+    }
+
+    // 查询类别 并查询类别下的标签
+    @Override
+    public Result<Object> qbcSortTag() {
+        HashMap<String, List<TagInfoVo>> map = new HashMap<>();
+
+        QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
+        wrapper.select("distinct sort_id");
+        List<SortTag> sortList = sortTagMapper.selectList(wrapper);
+
+        List<String> allTagIds = getAllTagIds();
+
+        for (Iterator<SortTag> it = sortList.iterator(); it.hasNext(); ) {
+            String sortId = it.next().getSortId();
+            List<String> tagIdList = getTagIdsBySortId(sortId);
+            List<TagInfoVo> tagInfoList = getTagInfoListByTagIds(tagIdList);
+            String sortName = getSortNameBySortId(sortId);
+            map.put(sortName, tagInfoList);
+            allTagIds.removeAll(tagIdList);
+        }
+
+        List<TagInfoVo> unassignedTagInfoList = getTagInfoListByTagIds(allTagIds);
+        map.put("未分配的标签", unassignedTagInfoList);
+
+        Result<Object> result = new Result<>();
+        result.setHost(fileServerUrl);
+        result.setData(map);
+
+        return result;
+    }
+
+    private List<TagInfoVo> getTagInfoListByTagIds(List<String> tagIds) {
+        List<TagInfoVo> tagInfoList = new ArrayList<>();
+        List<Tag> tagList = getTagsByTagIds(tagIds);
+
+        for (Tag tag : tagList) {
+            TagInfoVo tagInfo = new TagInfoVo();
+            tagInfo.setTagName(tag.getTagName());
+            tagInfo.setTagIcon(tag.getTagIcon());
+            tagInfo.setTagUrl(tag.getTagUrl());
+            tagInfo.setDescription(tag.getDescription());
+            tagInfo.setOrd(tag.getOrd());
+            tagInfoList.add(tagInfo);
+        }
+
+        return tagInfoList;
+    }
+
+    // 查询未分配标签的名称
+    private List<String> getAllTagIds() {
+        QueryWrapper<Tag> tagWrapper = new QueryWrapper<>();
+        tagWrapper.select("tag_id");
+        List<Tag> allTags = tagMapper.selectList(tagWrapper);
+        List<String> allTagIds = new ArrayList<>();
+        for (Tag tag : allTags) {
+            allTagIds.add(tag.getTagId());
+        }
+        return allTagIds;
+    }
+
+    // 根据sortId查询tagId列表的方法
+    private List<String> getTagIdsBySortId(String sortId) {
+        List<String> tagIds = new ArrayList<>();
+        QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
+        wrapper.eq("sort_id", sortId);
+        List<SortTag> sortTagList = sortTagMapper.selectList(wrapper);
+
+        for (SortTag sortTag : sortTagList) {
+            tagIds.add(sortTag.getTagId());
+        }
+
+        return tagIds;
+    }
+
+    // 根据sortId查询sortName
+    private String getSortNameBySortId(String sortId) {
+        QueryWrapper<Sort> sortWrapper = new QueryWrapper<>();
+        sortWrapper.eq("sort_id", sortId);
+        Sort sort = sortMapper.selectOne(sortWrapper);
+
+        if (sort != null) {
+            return sort.getSortName();
+        } else {
+            return "";
+        }
+    }
+
+    // 根据tagId查询tagNames
+    private List<Tag> getTagsByTagIds(List<String> tagIds) {
+        QueryWrapper<Tag> tagWrapper = new QueryWrapper<>();
+        tagWrapper.in("tag_id", tagIds);
+        return tagMapper.selectList(tagWrapper);
     }
 }

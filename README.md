@@ -18,6 +18,7 @@
 
 技术整合:
 
+效果图参考前端 [xiao-navigation-admin](https://github.com/xiangshaw/xiao-navigation-admin)：[Gitee](https://gitee.com/xiangshaw/xiao-navigation-admin) [GitHub](https://github.com/xiangshaw/xiao-navigation-admin)
 - [√] 类别管理
 - [√] 标签管理
 - [√] 用户管理
@@ -25,5 +26,6 @@
 - [√] 菜单管理
 - [√] 用户与角色关系
 - [√] 角色与菜单关系
+- [√] 标签图标上传，首页设计
 
 项目开发中，敬请期待~

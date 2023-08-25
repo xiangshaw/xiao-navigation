@@ -41,7 +41,10 @@ spring:
 # 设置Mapper接口所对应的XML文件位置，如果你在Mapper接口中有自定义方法，需要进行该配置
 mybatis-plus:
   configuration:
-    map-underscore-to-camel-case: false # 数据库下划线自动转驼峰标示关闭(为true，就简单粗暴的把下划线干掉了)
+    # 下划线字段与实体中驼峰命名属性映射
+    map-underscore-to-camel-case: true
+    # 打印日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   mapper-locations: classpath*:mapper/*.xml # 读取mapper包下映射
   # 设置别名包扫描路径，通过该属性可以给包中的类注册别名
   type-aliases-package: cn.coisini.navigation.model.pojos

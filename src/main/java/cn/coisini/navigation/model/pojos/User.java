@@ -41,9 +41,9 @@ public class User implements Serializable {
     @ApiModelProperty("手机")
     private String phone;
 
-    @TableField("head_url")
+    @TableField("avatar")
     @ApiModelProperty("头像地址")
-    private String headUrl;
+    private String avatar;
 
     @TableField("description")
     @ApiModelProperty("描述")

@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Author: xiaoxiang
@@ -73,6 +74,11 @@ public class SortController {
     public Result<Sort> status(@PathVariable("id") String id,
                                @PathVariable("status") Boolean status) {
         return sortService.updateStatus(id, status);
+    }
+    @GetMapping("/sortTag")
+    @ApiOperation("首页类别图标加载")
+    public Result<Object> qbcSortTag(){
+        return sortService.qbcSortTag();
     }
 
 }

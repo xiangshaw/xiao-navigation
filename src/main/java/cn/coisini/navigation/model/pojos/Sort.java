@@ -32,7 +32,7 @@ public class Sort implements Serializable {
     private String description;
     @ApiModelProperty("排序")
     @TableField("ord")
-    private Integer ord;
+    private int ord;
     @ApiModelProperty("类别状态 0正常 1禁用")
     @TableField("status")
     private Boolean status;

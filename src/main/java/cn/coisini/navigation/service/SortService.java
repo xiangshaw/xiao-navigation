@@ -2,6 +2,7 @@ package cn.coisini.navigation.service;
 
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.pojos.Sort;
+import cn.coisini.navigation.model.pojos.Tag;
 import cn.coisini.navigation.model.vo.QueryVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -32,5 +33,7 @@ public interface SortService extends IService<Sort> {
     Long countTagBySort(String id);
     // 根据多个类别id查询标签数量
     Map<String, Long> countTagsBySortIds(List<String> ids);
+    // 查询类别并查询类别下的标签
+    Result<Object> qbcSortTag();
 
 }
