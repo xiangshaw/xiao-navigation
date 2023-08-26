@@ -231,8 +231,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         HashMap<String, Object> map = new HashMap<>();
         // 3.根据用户id查询按钮权限值
         List<String> permsList = menuService.findUserButtonList(userId);
+        // 根据用户id查询信息
+        String avatar = baseMapper.selectById(userId).getAvatar();
         map.put("name", username);
-        map.put("avatar", "");
+        map.put("avatar", avatar);
         // 菜单权限数据
         map.put("routers", routerVoList);
         // 按钮权限数据
