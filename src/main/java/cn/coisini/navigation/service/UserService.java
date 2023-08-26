@@ -1,6 +1,7 @@
 package cn.coisini.navigation.service;
 
 import cn.coisini.navigation.model.common.dto.Result;
+import cn.coisini.navigation.model.pojos.Tag;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
 import cn.coisini.navigation.model.vo.AssginRoleVo;
@@ -15,7 +16,7 @@ import java.util.Map;
  */
 public interface UserService extends IService<User> {
     // 分页条件查询用户
-    Result<User> pagingQuery(UserQueryVo userQueryVo);
+    Result<Object> pagingQuery(UserQueryVo userQueryVo);
 
     // 根据id获取用户
     Result<User> getUserId(String id);
@@ -32,6 +33,9 @@ public interface UserService extends IService<User> {
 
     // 修改用户状态（0正常 1禁用）
     Result<User> updateStatus(String id, Boolean status);
+
+    // 单头像修改后 更新操作
+    Result<User> updateUserAvatar(String id, String userAvatar);
 
     // ---用户 角色 关系---
     // 根据用户id获取角色信息

@@ -1,6 +1,7 @@
 package cn.coisini.navigation.controller.v1;
 
 import cn.coisini.navigation.model.common.dto.Result;
+import cn.coisini.navigation.model.pojos.Tag;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
 import cn.coisini.navigation.model.vo.AssginRoleVo;
@@ -32,7 +33,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:list')")
     @ApiOperation("用户列表")
     @GetMapping("/list")
-    public Result<User> pagingQuery(UserQueryVo userQueryVo) {
+    public Result<Object> pagingQuery(UserQueryVo userQueryVo) {
         return userService.pagingQuery(userQueryVo);
     }
 
@@ -68,6 +69,13 @@ public class UserController {
     public Result<User> status(@PathVariable("id") String id,
                          @PathVariable("status") Boolean status) {
         return userService.updateStatus(id, status);
+    }
+
+    @GetMapping("/updateUserAvatar/{id}/{avatar}")
+    @ApiOperation("单独更改头像")
+    Result<User> updateUserAvatar(@PathVariable("id") String id,
+                              @PathVariable("avatar") String avatar) {
+        return userService.updateUserAvatar(id, avatar);
     }
 
     @ApiOperation("根据用户id获取角色信息数据")

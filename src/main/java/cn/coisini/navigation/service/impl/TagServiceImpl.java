@@ -23,10 +23,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -75,8 +72,8 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         if (!CharSequenceUtil.isEmpty(tagName)) {
             wrapper.like("tag_name", tagName);
         }
-        // 排序
-        wrapper.orderByDesc("tag_id");
+        // 构建排序条件，首先按 ord 升序排序，然后按创建时间降序排序
+        wrapper.orderByAsc("ord").orderByDesc("create_time");
         // 分页条件 当前页-每页条数
         Page<Tag> page = new Page<>(queryVo.getCurrent(), queryVo.getLimit());
         Page<Tag> tagPage = page(page, wrapper);
@@ -157,12 +154,33 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         if (tag.getTagIcon() != null) {
             fastDfsClient.delFile(delIconUrl(tag.getTagIcon()));
         }
+        // 检查是否关联类别，先删除数据
+       boolean checkTagAssociation =  checkTagAssociation(id);
+        // 存在则删除
+        if (checkTagAssociation){
+            removeTagAssociation(id);
+        }
+        QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
+        wrapper.eq("tag_id", tag.getTagId());
+        sortTagMapper.deleteById(wrapper);
         // 2.执行删除并检查结果
         boolean b = removeById(id);
         if (b) {
             return Result.ok(ResultEnum.SUCCESS);
         }
         return Result.error(ResultEnum.FAIL, "删除失败");
+    }
+    // 检测sortTag关联数据
+    private boolean checkTagAssociation(String tagId) {
+        QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
+        wrapper.eq("tag_id", tagId);
+        return sortTagMapper.selectCount(wrapper) > 0;
+    }
+    // 删除sortTag关联数据
+    private void removeTagAssociation(String tagId) {
+        QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
+        wrapper.eq("tag_id", tagId);
+        sortTagMapper.delete(wrapper);
     }
 
     @Override
@@ -191,6 +209,12 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
                 fastDfsClient.delFile(delIconUrl(tagIcon));
             }
         }
+        // 检测是否存在sortTag关联数据
+        List<String> associatedTags = getAssociatedTagsInSortTag(ids);
+        if (!associatedTags.isEmpty()) {
+            // 处理存在关联的标签
+            removeTagIdsAssociation(associatedTags);
+        }
         // 5. 删除操作
         boolean removeByIds = removeByIds(ids);
         if (removeByIds) {
@@ -199,6 +223,28 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
             return Result.error(ResultEnum.FAIL, "删除标签失败");
         }
     }
+    // 检测与sortTag关联数据
+    private List<String> getAssociatedTagsInSortTag(List<String> ids) {
+        List<String> associatedTags = new ArrayList<>();
+        for (String id : ids) {
+            QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
+            wrapper.eq("tag_id", id);
+            long count = sortTagMapper.selectCount(wrapper);
+            if (count > 0) {
+                associatedTags.add(id);
+            }
+        }
+        return associatedTags;
+    }
+    // 删除sortTag关联数据
+    private void removeTagIdsAssociation(List<String> tagIds) {
+        for (String tagId : tagIds) {
+            QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
+            wrapper.eq("tag_id", tagId);
+            sortTagMapper.delete(wrapper);
+        }
+    }
+
 
     @Override
     public Result<Tag> updateStatus(String id, Boolean status) {

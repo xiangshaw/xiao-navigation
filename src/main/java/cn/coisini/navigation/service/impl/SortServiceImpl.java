@@ -70,8 +70,8 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         if (!CharSequenceUtil.isEmpty(sortName)) {
             wrapper.like("sort_name", sortName);
         }
-        // 排序
-        wrapper.orderByDesc("sort_id");
+        // 构建排序条件，首先按 ord 升序排序，然后按创建时间降序排序
+        wrapper.orderByAsc("ord").orderByDesc("create_time");
         // 分页条件 当前页-每页条数
         Page<Sort> page = new Page<>(queryVo.getCurrent(), queryVo.getLimit());
         Page<Sort> sortPage = page(page, wrapper);
@@ -276,6 +276,10 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
 
         List<String> allTagIds = getAllTagIds();
 
+        if (allTagIds.isEmpty()){
+            return Result.ok("暂无标签，快去添加吧~");
+        }
+
         for (Iterator<SortTag> it = sortList.iterator(); it.hasNext(); ) {
             String sortId = it.next().getSortId();
             List<String> tagIdList = getTagIdsBySortId(sortId);
@@ -286,8 +290,9 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         }
 
         List<TagInfoVo> unassignedTagInfoList = getTagInfoListByTagIds(allTagIds);
-        map.put("未分配的标签", unassignedTagInfoList);
-
+        if (!unassignedTagInfoList.isEmpty()){
+            map.put("未分配的标签", unassignedTagInfoList);
+        }
         Result<Object> result = new Result<>();
         result.setHost(fileServerUrl);
         result.setData(map);
@@ -297,8 +302,15 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
 
     private List<TagInfoVo> getTagInfoListByTagIds(List<String> tagIds) {
         List<TagInfoVo> tagInfoList = new ArrayList<>();
-        List<Tag> tagList = getTagsByTagIds(tagIds);
-
+        // 检查tagIds是否为空
+        if (tagIds == null || tagIds.isEmpty()) {
+            // 返回一个空的结果列表
+            return tagInfoList;
+        }
+        QueryWrapper<Tag> tagWrapper = new QueryWrapper<>();
+        tagWrapper.in("tag_id", tagIds);
+        List<Tag> tagList = tagMapper.selectList(tagWrapper);
+        // 根据查询结果构建TagInfoVo列表
         for (Tag tag : tagList) {
             TagInfoVo tagInfo = new TagInfoVo();
             tagInfo.setTagName(tag.getTagName());
@@ -311,6 +323,7 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
 
         return tagInfoList;
     }
+
 
     // 查询未分配标签的名称
     private List<String> getAllTagIds() {

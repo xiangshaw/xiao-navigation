@@ -14,12 +14,15 @@ import cn.coisini.navigation.model.vo.RouterVo;
 import cn.coisini.navigation.model.vo.UserQueryVo;
 import cn.coisini.navigation.service.MenuService;
 import cn.coisini.navigation.service.UserService;
+import cn.coisini.navigation.utils.FastDfsClient;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -38,16 +41,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final RoleMapper roleMapper;
     private final UserRoleMapper userRoleMapper;
     private final MenuService menuService;
+    private final FastDfsClient fastDfsClient;
 
-    public UserServiceImpl(RoleMapper roleMapper, UserRoleMapper userRoleMapper, MenuService menuService) {
+    @Value("${fdfs.url}")
+    private String fileServerUrl;
+
+    public UserServiceImpl(RoleMapper roleMapper, UserRoleMapper userRoleMapper, MenuService menuService, FastDfsClient fastDfsClient) {
         this.roleMapper = roleMapper;
         this.userRoleMapper = userRoleMapper;
         this.menuService = menuService;
+        this.fastDfsClient = fastDfsClient;
     }
 
     // 分页条件查询用户
     @Override
-    public Result<User> pagingQuery(UserQueryVo userQueryVo) {
+    public Result<Object> pagingQuery(UserQueryVo userQueryVo) {
         // 获取条件
         String keyword = userQueryVo.getKeyword();
         String createTimeBegin = userQueryVo.getCreateTimeBegin();
@@ -70,13 +78,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 排序
         wrapper.eq("del_flag", 0).orderByDesc("id");
+        // 选择性排除password字段
+        wrapper.select(User.class, info -> !"password".equals(info.getColumn()));
         // 分页条件 当前页-每页条数
         Page<User> page = new Page<>(userQueryVo.getCurrent(), userQueryVo.getLimit());
         Page<User> userPage = page(page, wrapper);
         // 总条数
         userPage.setTotal(userPage.getRecords().size());
         // 返回结果
-        return Result.ok(userPage);
+        Result<Object> result = new Result<>();
+        result.setData(userPage);
+        result.setHost(fileServerUrl);
+        return result;
     }
 
     // 根据Id获取用户
@@ -120,6 +133,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
+        user.setPassword(null);
         // 2.修改并判断结果
         boolean b = updateById(user);
         if (b) {
@@ -135,10 +149,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (id == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
-        // 2.判断当前角色是否存在
+        // 2.判断当前用户是否存在
         User user = getById(id);
         if (user == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
+        }
+        // 先删除头像
+        if (user.getAvatar() != null) {
+            fastDfsClient.delFile(delAvatar(user.getAvatar()));
         }
         // 3.删除并判断结果
         boolean b = removeById(id);
@@ -166,6 +184,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.ok(ResultEnum.SUCCESS);
         }
         return Result.error(ResultEnum.FAIL, "用户状态修改失败");
+    }
+
+    // 单头像修改后 更新操作
+    @Override
+    public Result<User> updateUserAvatar(String id, String userAvatar) {
+        // 参数检查
+        if (id == null || userAvatar == null) {
+            return Result.error(ResultEnum.FAIL, "头像更新失败，参数不完整");
+        }
+        // 查询用户是否存在
+        User user = getById(id);
+        if (user == null){
+            // 首次提交
+            return Result.ok("头像添加成功~");
+        }
+        // 下划线替换回斜杠
+        String avatar = userAvatar.replace('_', '/');
+        // 更新头像
+        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id", id);
+        wrapper.set("avatar", avatar);
+        baseMapper.update(user, wrapper);
+        return Result.ok(ResultEnum.SUCCESS);
     }
 
     // 获取用户id获取角色数据
@@ -213,7 +254,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     // 用户登录（交给Spring Security了）
     @Override
     public User getUserInfoByName(String username) {
-        if (username.equals("null")) {
+        if ("null".equals(username)) {
             throw new CoisiniException(ResultEnum.PARAM_INVALID);
         }
         return baseMapper.selectOne(new QueryWrapper<User>().eq("username", username));
@@ -234,7 +275,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 根据用户id查询信息
         String avatar = baseMapper.selectById(userId).getAvatar();
         map.put("name", username);
-        map.put("avatar", avatar);
+        map.put("avatar", fileServerUrl + avatar);
         // 菜单权限数据
         map.put("routers", routerVoList);
         // 按钮权限数据
@@ -254,6 +295,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 return Result.ok(ResultEnum.SUCCESS);
             }
             return Result.error(ResultEnum.FAIL, "用户注册失败");
+        }
+    }
+
+    // 删除头像
+    private String delAvatar(String avatar) {
+        // 找到 "group" 在 avatar 中的位置
+        int startIndex = avatar.indexOf("group");
+        if (startIndex != -1) {
+            // 截取 "group" 后面的部分
+            return avatar.substring(startIndex);
+        } else {
+            return avatar;
         }
     }
 }
