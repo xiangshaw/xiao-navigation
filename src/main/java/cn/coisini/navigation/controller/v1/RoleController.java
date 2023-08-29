@@ -1,5 +1,7 @@
 package cn.coisini.navigation.controller.v1;
 
+import cn.coisini.navigation.common.log.annotation.Log;
+import cn.coisini.navigation.common.log.enums.BusinessType;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.pojos.Role;
 import cn.coisini.navigation.model.vo.RoleQueryVo;
@@ -46,6 +48,7 @@ public class RoleController {
     }
 
     @PreAuthorize("hasAuthority('role:add')")
+    @Log(title = "角色管理",businessType = BusinessType.INSERT)
     @ApiOperation("添加角色")
     @PostMapping("/save")
     public Result<Role> saveRole(@RequestBody Role role) {
@@ -53,6 +56,7 @@ public class RoleController {
     }
 
     @PreAuthorize("hasAuthority('role:update')")
+    @Log(title = "角色管理",businessType = BusinessType.UPDATE)
     @ApiOperation("修改角色")
     @PutMapping("/update")
     public Result<Role> updateRole(@RequestBody Role role) {
@@ -60,6 +64,7 @@ public class RoleController {
     }
 
     @PreAuthorize("hasAuthority('role:remove')")
+    @Log(title = "角色管理",businessType = BusinessType.DELETE)
     @ApiOperation("删除角色")
     @DeleteMapping("/remove/{id}")
     public Result<Role> removeRole(@PathVariable("id") String id) {
@@ -67,6 +72,7 @@ public class RoleController {
     }
 
     @ApiOperation("批量删除角色")
+    @Log(title = "角色管理",businessType = BusinessType.BATCH_REMOVE)
     @DeleteMapping("/batchRemove")
     public Result<List<Role>> batchRemoveRole(@RequestBody List<String> ids) {
         return roleService.batchRemove(ids);

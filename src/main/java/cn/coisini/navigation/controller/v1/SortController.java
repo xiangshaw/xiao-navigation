@@ -1,5 +1,7 @@
 package cn.coisini.navigation.controller.v1;
 
+import cn.coisini.navigation.common.log.annotation.Log;
+import cn.coisini.navigation.common.log.enums.BusinessType;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.pojos.Sort;
 import cn.coisini.navigation.model.vo.QueryVo;
@@ -11,7 +13,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Author: xiaoxiang
@@ -41,6 +42,7 @@ public class SortController {
     }
 
     @PreAuthorize("hasAuthority('sort:add')")
+    @Log(title = "类别管理",businessType = BusinessType.INSERT)
     @PostMapping("/save")
     @ApiOperation("保存类别")
     public Result<Sort> saveSort(@RequestBody Sort sort) {
@@ -48,6 +50,7 @@ public class SortController {
     }
 
     @PreAuthorize("hasAuthority('sort:update')")
+    @Log(title = "类别管理",businessType = BusinessType.UPDATE)
     @PatchMapping("/update")
     @ApiOperation("更新类别")
     public Result<Sort> updateSort(@RequestBody Sort sort) {
@@ -55,6 +58,7 @@ public class SortController {
     }
 
     @PreAuthorize("hasAuthority('sort:remove')")
+    @Log(title = "类别管理",businessType = BusinessType.DELETE)
     @DeleteMapping("/remove/{id}")
     @ApiOperation("删除类别")
     public Result<Sort> removeSort(@ApiParam("类别Id") @PathVariable("id") String id) {
@@ -62,6 +66,7 @@ public class SortController {
     }
 
     @PreAuthorize("hasAuthority('sort:batchRemove')")
+    @Log(title = "类别管理",businessType = BusinessType.BATCH_REMOVE)
     @ApiOperation("批量删除类别")
     @DeleteMapping("/batchRemove")
     public Result<List<Sort>> batchRemoveRole(@RequestBody List<String> ids) {
@@ -69,6 +74,7 @@ public class SortController {
     }
 
     @PreAuthorize("hasAuthority('sort:status')")
+    @Log(title = "类别管理",businessType = BusinessType.STATUS)
     @GetMapping("/updateStatus/{id}/{status}")
     @ApiOperation("更改类别状态(0启用 1禁用)")
     public Result<Sort> status(@PathVariable("id") String id,

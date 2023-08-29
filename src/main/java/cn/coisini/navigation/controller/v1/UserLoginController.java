@@ -1,6 +1,8 @@
 package cn.coisini.navigation.controller.v1;
 
 import cn.coisini.navigation.common.exception.CoisiniException;
+import cn.coisini.navigation.common.log.annotation.Log;
+import cn.coisini.navigation.common.log.enums.BusinessType;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.model.pojos.User;
@@ -77,12 +79,14 @@ public class UserLoginController {
     }
 
     @ApiOperation("退出登录")
+    @Log(title = "登录管理",businessType = BusinessType.EXIT)
     @PostMapping("/logout")
     public Result<ResultEnum> logout() {
         return Result.ok(ResultEnum.SUCCESS);
     }
 
     @ApiOperation("用户注册")
+    @Log(title = "用户管理",businessType = BusinessType.INSERT)
     @PostMapping("/register")
     public Result<User> registerUser(@RequestBody User user) {
         return userService.registerUser(user);

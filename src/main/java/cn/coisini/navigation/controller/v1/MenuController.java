@@ -1,5 +1,7 @@
 package cn.coisini.navigation.controller.v1;
 
+import cn.coisini.navigation.common.log.annotation.Log;
+import cn.coisini.navigation.common.log.enums.BusinessType;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.pojos.Menu;
 import cn.coisini.navigation.model.vo.AssginMenuVo;
@@ -40,6 +42,7 @@ public class MenuController {
     }
 
     @PreAuthorize("hasAuthority('menu:add')")
+    @Log(title = "菜单管理",businessType = BusinessType.INSERT)
     @ApiOperation("添加菜单")
     @PostMapping("/save")
     public Result<Menu> saveMenu(@RequestBody Menu menu) {
@@ -47,6 +50,7 @@ public class MenuController {
     }
 
     @PreAuthorize("hasAuthority('menu:update')")
+    @Log(title = "菜单管理",businessType = BusinessType.UPDATE)
     @ApiOperation("修改菜单")
     @PutMapping("/update")
     public Result<Menu> updateMenu(@RequestBody Menu menu) {
@@ -54,6 +58,7 @@ public class MenuController {
     }
 
     @PreAuthorize("hasAuthority('menu:remove')")
+    @Log(title = "菜单管理",businessType = BusinessType.DELETE)
     @ApiOperation("根据id删除菜单")
     @DeleteMapping("/remove/{id}")
     public Result<Menu> remove(@PathVariable("id") Long id) {
@@ -68,6 +73,7 @@ public class MenuController {
     }
 
     @PreAuthorize("hasAuthority('role:assignAuth')")
+    @Log(title = "菜单管理",businessType = BusinessType.ASSGIN)
     @ApiOperation("给角色分配权限")
     @PostMapping("/doAssign")
     public Result<Menu> doAssign(@RequestBody AssginMenuVo menuVo) {
@@ -75,6 +81,7 @@ public class MenuController {
     }
 
     @ApiOperation("更改菜单状态(0启用 1禁用)")
+    @Log(title = "菜单管理",businessType = BusinessType.STATUS)
     @GetMapping("/updateStatus/{id}/{status}")
     public Result<Menu> status(@PathVariable("id") Long id,
                          @PathVariable("status") Boolean status) {

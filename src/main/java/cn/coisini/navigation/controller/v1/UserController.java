@@ -1,7 +1,8 @@
 package cn.coisini.navigation.controller.v1;
 
+import cn.coisini.navigation.common.log.annotation.Log;
+import cn.coisini.navigation.common.log.enums.BusinessType;
 import cn.coisini.navigation.model.common.dto.Result;
-import cn.coisini.navigation.model.pojos.Tag;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
 import cn.coisini.navigation.model.vo.AssginRoleVo;
@@ -44,6 +45,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('user:add')")
+    @Log(title = "用户管理", businessType = BusinessType.INSERT)
     @ApiOperation("添加用户")
     @PostMapping("/save")
     public Result<User> saveUser(@RequestBody User user) {
@@ -51,6 +53,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('user:update')")
+    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     @ApiOperation("修改用户")
     @PutMapping("/update")
     public Result<User> update(@RequestBody User user) {
@@ -58,6 +61,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('user:remove')")
+    @Log(title = "用户管理", businessType = BusinessType.DELETE)
     @ApiOperation("删除用户")
     @DeleteMapping("/remove/{id}")
     public Result<User> remove(@PathVariable("id") String id) {
@@ -65,6 +69,7 @@ public class UserController {
     }
 
     @ApiOperation("更改用户状态(0启用 1禁用)")
+    @Log(title = "用户管理", businessType = BusinessType.STATUS)
     @GetMapping("/updateStatus/{id}/{status}")
     public Result<User> status(@PathVariable("id") String id,
                          @PathVariable("status") Boolean status) {
@@ -72,6 +77,7 @@ public class UserController {
     }
 
     @GetMapping("/updateUserAvatar/{id}/{avatar}")
+    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
     @ApiOperation("单独更改头像")
     Result<User> updateUserAvatar(@PathVariable("id") String id,
                               @PathVariable("avatar") String avatar) {
@@ -85,6 +91,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasAuthority('user:assignRole')")
+    @Log(title = "用户管理", businessType = BusinessType.CAST)
     @ApiOperation("给用户分配角色")
     @PostMapping("/doAssign")
     public Result<UserRole> doAssign(@RequestBody AssginRoleVo assginRoleVo) {

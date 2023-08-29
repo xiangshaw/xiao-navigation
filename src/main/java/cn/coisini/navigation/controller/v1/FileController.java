@@ -1,5 +1,7 @@
 package cn.coisini.navigation.controller.v1;
 
+import cn.coisini.navigation.common.log.annotation.Log;
+import cn.coisini.navigation.common.log.enums.BusinessType;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.utils.FastDfsClient;
@@ -27,6 +29,7 @@ public class FileController {
         this.fastDfsClient = fastDfsClient;
     }
 
+    @Log(title = "上传管理",businessType = BusinessType.INSERT)
     @PostMapping("/fastdfs/upload")
     public Result<String> uploadFile(MultipartFile file) {/*形参 file*/
         try {
@@ -49,6 +52,7 @@ public class FileController {
 
     }
 
+    @Log(title = "上传管理",businessType = BusinessType.DELETE)
     @GetMapping("/fastdfs/remove")
     public Result<String> delFile(String fileId) {
         // /fastdfs/remove?fileId=group1/M00/00/00/wKgUgGTdAg-AKc1bAALxXtyM8xw319.ico

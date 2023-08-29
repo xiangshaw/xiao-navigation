@@ -1,5 +1,7 @@
 package cn.coisini.navigation.controller.v1;
 
+import cn.coisini.navigation.common.log.annotation.Log;
+import cn.coisini.navigation.common.log.enums.BusinessType;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.pojos.SortTag;
 import cn.coisini.navigation.model.pojos.Tag;
@@ -44,6 +46,7 @@ public class TagController {
     }
 
     @PreAuthorize("hasAuthority('tag:add')")
+    @Log(title = "标签管理",businessType = BusinessType.INSERT)
     @PostMapping("/save")
     @ApiOperation("保存标签")
     public Result<Tag> saveTag(@RequestBody @Validated Tag tag) {
@@ -51,6 +54,7 @@ public class TagController {
     }
 
     @PreAuthorize("hasAuthority('tag:update')")
+    @Log(title = "标签管理",businessType = BusinessType.UPDATE)
     @PatchMapping("/update")
     @ApiOperation("更新标签")
     public Result<Tag> updateTag(@RequestBody Tag tag) {
@@ -58,6 +62,7 @@ public class TagController {
     }
 
     @PreAuthorize("hasAuthority('tag:remove')")
+    @Log(title = "标签管理",businessType = BusinessType.DELETE)
     @DeleteMapping("/remove/{id}")
     @ApiOperation("删除标签")
     public Result<Tag> removeTag(@ApiParam("标签Id") @PathVariable("id") String id) {
@@ -65,6 +70,7 @@ public class TagController {
     }
 
     @PreAuthorize("hasAuthority('tag:batchRemove')")
+    @Log(title = "标签管理",businessType = BusinessType.BATCH_REMOVE)
     @ApiOperation("批量删除标签")
     @DeleteMapping("/batchRemove")
     public Result<List<Tag>> batchRemoveRole(@RequestBody List<String> ids) {
@@ -72,6 +78,7 @@ public class TagController {
     }
 
     @PreAuthorize("hasAuthority('tag:status')")
+    @Log(title = "标签管理",businessType = BusinessType.STATUS)
     @GetMapping("/updateStatus/{id}/{status}")
     @ApiOperation("更改标签状态(0启用 1禁用)")
     public Result<Tag> status(@PathVariable("id") String id,
@@ -80,6 +87,7 @@ public class TagController {
     }
 
     @GetMapping("/updateTagIcon/{tagId}/{tagIcon}")
+    @Log(title = "标签管理",businessType = BusinessType.UPDATE)
     @ApiOperation("单独更改标签图标")
     Result<Tag> updateTagIcon(@PathVariable("tagId") String tagId,
                               @PathVariable("tagIcon") String tagIcon) {
@@ -93,6 +101,7 @@ public class TagController {
     }
 
     @PreAuthorize("hasAuthority('tag:assignSort')")
+    @Log(title = "标签管理",businessType = BusinessType.CAST)
     @ApiOperation("给标签分配类别")
     @PostMapping("/doAssign")
     public Result<SortTag> doAssign(@RequestBody SortTagVo sortTagVo) {

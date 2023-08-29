@@ -1,9 +1,11 @@
 package cn.coisini.navigation.security;
 
 import cn.coisini.navigation.common.exception.CoisiniException;
+import cn.coisini.navigation.common.log.service.AsyncLoginLogService;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.model.vo.LoginVo;
+import cn.coisini.navigation.utils.IpUtils;
 import cn.coisini.navigation.utils.JwtUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.alibaba.fastjson2.JSON;
@@ -33,11 +35,13 @@ import java.util.Map;
 @Configuration
 public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final StringRedisTemplate stringRedisTemplate;
+    private final AsyncLoginLogService asyncLoginLogService;
 
     // 构造
     public TokenLoginFilter(
             AuthenticationManager authenticationManager,
-            StringRedisTemplate stringRedisTemplate) {
+            StringRedisTemplate stringRedisTemplate, AsyncLoginLogService asyncLoginLogService) {
+        this.asyncLoginLogService = asyncLoginLogService;
         this.setAuthenticationManager(authenticationManager);
         this.setPostOnly(false);
         //指定登录接口及提交方式，可以指定任意路径
@@ -81,17 +85,25 @@ public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
                                             Authentication auth) {
         // 获取认证对象
         CustomUser customUser = (CustomUser) auth.getPrincipal();
-
         //保存权限数据
         stringRedisTemplate.opsForValue().set(customUser.getUsername(),
                 JSON.toJSONString(customUser.getAuthorities()));
-
         // 生成token
         String token = JwtUtil.getToken(customUser.getUser().getId(), customUser.getUser().getUsername());
-
         Map<String, Object> map = new HashMap<>();
         map.put("token", token);
         out(response, Result.ok(map));
+        // 记录登录日志
+        try {
+            asyncLoginLogService.recordLoginLog(JwtUtil.getUserId(token),
+                    JwtUtil.getUsername(token),
+                    false,
+                    IpUtils.getIp(request), IpUtils.getIp2region(IpUtils.getIp(request)),
+                    IpUtils.getCityInfo(IpUtils.getIp(request)),
+                    "登录成功");
+        } catch (Exception e) {
+            logger.error("记录登录日志出错！", e);
+        }
     }
 
     /**
@@ -105,6 +117,17 @@ public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
             out(response, Result.error(ResultEnum.FAIL, e.getMessage()));
         } else {
             out(response, Result.error(ResultEnum.LOGIN_PASSWORD_ERROR));
+        }
+       
+        // 记录登录日志
+        try {
+            asyncLoginLogService.recordLoginLog(null, request.getParameter("username"),
+                    true,
+                    IpUtils.getIp(request), IpUtils.getIp2region(IpUtils.getIp(request)),
+                    IpUtils.getCityInfo(IpUtils.getIp(request)),
+                    "登录成功");
+        } catch (Exception exception) {
+            logger.error("记录登录日志出错！", exception);
         }
     }
 

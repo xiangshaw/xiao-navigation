@@ -1,6 +1,7 @@
 package cn.coisini.navigation.config;
 
 
+import cn.coisini.navigation.common.log.service.AsyncLoginLogService;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.security.MyUserDetailsServiceImpl;
@@ -44,11 +45,13 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final MyUserDetailsServiceImpl myUserDetailService;
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
     private final StringRedisTemplate stringRedisTemplate;
+    private final AsyncLoginLogService asyncLoginLogService;
 
-    public SecurityConfig(MyUserDetailsServiceImpl myUserDetailService, TokenAuthenticationFilter tokenAuthenticationFilter, StringRedisTemplate stringRedisTemplate) {
+    public SecurityConfig(MyUserDetailsServiceImpl myUserDetailService, TokenAuthenticationFilter tokenAuthenticationFilter, StringRedisTemplate stringRedisTemplate, AsyncLoginLogService asyncLoginLogService) {
         this.myUserDetailService = myUserDetailService;
         this.tokenAuthenticationFilter = tokenAuthenticationFilter;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.asyncLoginLogService = asyncLoginLogService;
     }
 
     @Bean
@@ -80,7 +83,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                         "/swagger-resources/**",
                         "/v2/api-docs/**")
                 .permitAll()
-                .antMatchers("/api/v1/index/login", "/api/v1/index/code", "/api/v1/index/register","/api/v1/sort/sortTag")// 对登录、注册、验证码 允许匿名访问
+                .antMatchers("/api/v1/index/login",
+                        "/api/v1/index/register",
+                        "/api/v1/index/code",
+                        "/api/v1/index/logout",
+                        "/api/v1/sort/sortTag")// 对登录、注册、验证码、退出、首页 允许匿名访问
                 .permitAll()
                 .antMatchers(HttpMethod.OPTIONS)//跨域请求会先进行一次options请求
                 .permitAll()
@@ -93,7 +100,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // 添加JWT filter
         httpSecurity.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         // 自定义登录校验
-        httpSecurity.addFilter(new TokenLoginFilter(authenticationManager(), stringRedisTemplate));
+        httpSecurity.addFilter(new TokenLoginFilter(authenticationManager(), stringRedisTemplate, asyncLoginLogService));
         //添加自定义未授权和未登录结果返回
         httpSecurity.exceptionHandling()
                 .accessDeniedHandler(new RestfulAccessDeniedHandler())
