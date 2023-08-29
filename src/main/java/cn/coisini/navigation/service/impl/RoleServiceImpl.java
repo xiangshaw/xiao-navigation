@@ -55,8 +55,6 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role> implements Ro
         // 分页条件
         Page<Role> page = new Page<>(roleQueryVo.getCurrent(), roleQueryVo.getLimit());
         Page<Role> rolePage = page(page, wrapper);
-        // 总条数
-        rolePage.setTotal(rolePage.getRecords().size());
         return Result.ok(rolePage);
 
     }

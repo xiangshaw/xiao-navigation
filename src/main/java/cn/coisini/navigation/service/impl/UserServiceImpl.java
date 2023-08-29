@@ -83,8 +83,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         // 分页条件 当前页-每页条数
         Page<User> page = new Page<>(userQueryVo.getCurrent(), userQueryVo.getLimit());
         Page<User> userPage = page(page, wrapper);
-        // 总条数
-        userPage.setTotal(userPage.getRecords().size());
         // 返回结果
         Result<Object> result = new Result<>();
         result.setData(userPage);

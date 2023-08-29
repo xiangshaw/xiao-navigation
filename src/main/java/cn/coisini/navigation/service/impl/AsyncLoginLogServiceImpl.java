@@ -74,7 +74,6 @@ public class AsyncLoginLogServiceImpl extends ServiceImpl<AsyncLoginLogMapper, A
         // 分页条件（当前页、每页条数）
         Page<AsyncLoginLog> page = new Page<>(asyncLoginLogQueryVo.getCurrent(), asyncLoginLogQueryVo.getLimit());
         Page<AsyncLoginLog> loginLogPage = page(page, wrapper);
-        loginLogPage.setTotal(loginLogPage.getRecords().size());
         return Result.ok(loginLogPage);
     }
 

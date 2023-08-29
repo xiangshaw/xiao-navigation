@@ -64,8 +64,6 @@ public class AsyncOperLogServiceImpl extends ServiceImpl<AsyncOperLogMapper, Asy
         // 分页条件（当前页、每页条数）
         Page<AsyncOperLog> page = new Page<>(asyncOperLogQueryVo.getCurrent(), asyncOperLogQueryVo.getLimit());
         Page<AsyncOperLog> operLogPage = page(page, wrapper);
-        // 总条数
-        operLogPage.setTotal(operLogPage.getRecords().size());
         return Result.ok(operLogPage);
     }
 

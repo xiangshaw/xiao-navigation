@@ -77,8 +77,6 @@ public class TagServiceImpl extends ServiceImpl<TagMapper, Tag> implements TagSe
         // 分页条件 当前页-每页条数
         Page<Tag> page = new Page<>(queryVo.getCurrent(), queryVo.getLimit());
         Page<Tag> tagPage = page(page, wrapper);
-        // 总条数
-        tagPage.setTotal(tagPage.getRecords().size());
         Result<Object> result = new Result<>();
         result.setHost(fileServerUrl);
         result.setData(tagPage);

@@ -75,8 +75,6 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         // 分页条件 当前页-每页条数
         Page<Sort> page = new Page<>(queryVo.getCurrent(), queryVo.getLimit());
         Page<Sort> sortPage = page(page, wrapper);
-        // 总条数
-        sortPage.setTotal(sortPage.getRecords().size());
         // 返回结果
         return Result.ok(sortPage);
     }

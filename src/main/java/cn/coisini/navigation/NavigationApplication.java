@@ -2,6 +2,8 @@ package cn.coisini.navigation;
 
 import cn.coisini.navigation.utils.IdWorker;
 import cn.hutool.core.text.CharSequenceUtil;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -56,6 +58,19 @@ public class NavigationApplication {
         return new IdWorker(workId, datacenterId);
     }
 
+    // 分页插件
+    @Bean
+    public MybatisPlusInterceptor paginationInterceptors(){
+        MybatisPlusInterceptor mybatisPlusInterceptor = new MybatisPlusInterceptor();
+        // 分页拦截器
+        PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor();
+        paginationInnerInterceptor.setOverflow(false);
+        paginationInnerInterceptor.setMaxLimit(500L);
+        mybatisPlusInterceptor.addInnerInterceptor(paginationInnerInterceptor);
+        return mybatisPlusInterceptor;
+    }
+
+    // api文档（兼容knife4j）
     @Bean
     public static BeanPostProcessor springfoxHandlerProviderBeanPostProcessor() {
         return new BeanPostProcessor() {
