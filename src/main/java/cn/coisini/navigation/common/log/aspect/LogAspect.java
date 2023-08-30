@@ -136,12 +136,12 @@ public class LogAspect {
         // 设置操作人类别 例如：MANAGE
         operLog.setOperatorType(log.operatorType().name());
         // 是否需要保存request，参数和值
-        if (log.isSaveRequestData()) {
+        if (log.saveRequestData()) {
             // 获取参数的信息，传入到数据库中。 异常的参数
             setRequestValue(joinPoint, operLog);
         }
         // 是否需要保存response，参数和值 例如：{"code":200,"data":"SUCCESS","message":"操作成功"}
-        if (log.isSaveResponseData() && !ObjectUtils.isEmpty(jsonResult)) {
+        if (log.saveResponseData() && !ObjectUtils.isEmpty(jsonResult)) {
             operLog.setJsonResult(JSON.toJSONString(jsonResult));
         }
     }

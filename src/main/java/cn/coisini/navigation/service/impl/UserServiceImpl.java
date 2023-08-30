@@ -10,11 +10,13 @@ import cn.coisini.navigation.model.pojos.Role;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
 import cn.coisini.navigation.model.vo.AssginRoleVo;
+import cn.coisini.navigation.model.vo.RegisterUserVo;
 import cn.coisini.navigation.model.vo.RouterVo;
 import cn.coisini.navigation.model.vo.UserQueryVo;
 import cn.coisini.navigation.service.MenuService;
 import cn.coisini.navigation.service.UserService;
 import cn.coisini.navigation.utils.FastDfsClient;
+import cn.coisini.navigation.utils.IdWorker;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
@@ -23,8 +25,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -43,14 +47,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final MenuService menuService;
     private final FastDfsClient fastDfsClient;
 
+    private final StringRedisTemplate stringRedisTemplate;
+
     @Value("${fdfs.url}")
     private String fileServerUrl;
 
-    public UserServiceImpl(RoleMapper roleMapper, UserRoleMapper userRoleMapper, MenuService menuService, FastDfsClient fastDfsClient) {
+    public UserServiceImpl(RoleMapper roleMapper, UserRoleMapper userRoleMapper, MenuService menuService, FastDfsClient fastDfsClient, StringRedisTemplate stringRedisTemplate) {
         this.roleMapper = roleMapper;
         this.userRoleMapper = userRoleMapper;
         this.menuService = menuService;
         this.fastDfsClient = fastDfsClient;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     // 分页条件查询用户
@@ -117,6 +124,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 3.输入的密码进行BCryptPasswordEncoder加密
         user.setPassword(new BCryptPasswordEncoder().encode(user.getPassword()));
+        user.setId(String.valueOf(new IdWorker().nextId()));
+        user.setNickname("用户" + user.getId());
         boolean b = save(user);
         if (b) {
             return Result.ok(ResultEnum.SUCCESS);
@@ -153,7 +162,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
         // 先删除头像
-        if (user.getAvatar() != null) {
+        if (!ObjectUtils.isEmpty(user.getAvatar())) {
             fastDfsClient.delFile(delAvatar(user.getAvatar()));
         }
         // 3.删除并判断结果
@@ -283,17 +292,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 用户注册
     @Override
-    public Result<User> registerUser(User user) {
-        if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPhone())) {
+    public Result<User> registerUser(RegisterUserVo registerUserVo) {
+        if (StringUtils.isEmpty(registerUserVo.getUsername()) || StringUtils.isEmpty(registerUserVo.getPhone())) {
             return Result.error(ResultEnum.PARAM_REQUIRE, "用户名和手机号不能为空");
-        } else {
-            user.setAvatar("");
-            boolean b = save(user);
-            if (b) {
-                return Result.ok(ResultEnum.SUCCESS);
-            }
-            return Result.error(ResultEnum.FAIL, "用户注册失败");
         }
+        String checkCode = stringRedisTemplate.opsForValue().get("checkCode:" + registerUserVo.getUuid());
+        // 验证码校验
+        if (CharSequenceUtil.isBlank(checkCode)) {
+            return Result.error(ResultEnum.SECURITY_CODE);
+        }
+        if (!checkCode.equals(registerUserVo.getCode())) {
+            return Result.error(ResultEnum.SECURITY_CODE_ERROR);
+        }
+        User user = new User();
+        user.setUsername(registerUserVo.getUsername());
+        user.setPassword(registerUserVo.getPassword());
+        user.setPhone(registerUserVo.getPhone());
+        Result<User> userResult = saveUser(user);
+        if (userResult.getCode() == 200){
+            return Result.ok(userResult.getmessage());
+        }
+        return Result.error(ResultEnum.FAIL,userResult.getmessage());
     }
 
     // 删除头像

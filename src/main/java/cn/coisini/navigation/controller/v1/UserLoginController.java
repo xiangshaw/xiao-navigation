@@ -7,6 +7,7 @@ import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.vo.LoginVo;
+import cn.coisini.navigation.model.vo.RegisterUserVo;
 import cn.coisini.navigation.service.UserService;
 import cn.coisini.navigation.utils.JwtUtil;
 import cn.hutool.core.io.FastByteArrayOutputStream;
@@ -88,8 +89,8 @@ public class UserLoginController {
     @ApiOperation("用户注册")
     @Log(title = "用户管理",businessType = BusinessType.INSERT)
     @PostMapping("/register")
-    public Result<User> registerUser(@RequestBody User user) {
-        return userService.registerUser(user);
+    public Result<User> registerUser(@RequestBody RegisterUserVo registerUserVo) {
+        return userService.registerUser(registerUserVo);
     }
 
     // 登录交给Spring Security管理

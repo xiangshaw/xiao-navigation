@@ -1,10 +1,10 @@
 package cn.coisini.navigation.service;
 
 import cn.coisini.navigation.model.common.dto.Result;
-import cn.coisini.navigation.model.pojos.Tag;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
 import cn.coisini.navigation.model.vo.AssginRoleVo;
+import cn.coisini.navigation.model.vo.RegisterUserVo;
 import cn.coisini.navigation.model.vo.UserQueryVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -51,5 +51,5 @@ public interface UserService extends IService<User> {
     Map<String, Object> getUserInfo(String userId, String username);
 
     // 用户注册
-    Result<User> registerUser(User user);
+    Result<User> registerUser(RegisterUserVo registerUserVo);
 }

@@ -102,6 +102,11 @@ public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
                     IpUtils.getCityInfo(IpUtils.getIp(request)),
                     "登录成功");
         } catch (Exception e) {
+            asyncLoginLogService.recordLoginLog(null, request.getParameter("username"),
+                    false,
+                   null, null,
+                    null,
+                    String.valueOf(e));
             logger.error("记录登录日志出错！", e);
         }
     }
@@ -127,6 +132,11 @@ public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
                     IpUtils.getCityInfo(IpUtils.getIp(request)),
                     "登录成功");
         } catch (Exception exception) {
+            asyncLoginLogService.recordLoginLog(null, request.getParameter("username"),
+                    false,
+                    null, null,
+                    null,
+                    String.valueOf(exception));
             logger.error("记录登录日志出错！", exception);
         }
     }
