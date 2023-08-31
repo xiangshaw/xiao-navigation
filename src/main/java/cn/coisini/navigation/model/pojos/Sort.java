@@ -24,6 +24,9 @@ public class Sort implements Serializable {
     @ApiModelProperty(value = "类别ID", required = true, example = "7072624308312477713")
     @TableId("sort_id")
     private String id;
+    @ApiModelProperty(value = "所属用户ID", required = true, example = "7072624308312477713")
+    @TableField("user_id")
+    private String userId;
     @ApiModelProperty(value = "类别名",required = true)
     @TableField("sort_name")
     private String sortName;

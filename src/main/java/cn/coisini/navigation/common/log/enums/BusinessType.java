@@ -33,4 +33,6 @@ public enum BusinessType {
     STATUS,
     // 清空数据
     CLEAN,
+    // 记录异常
+    RECORD_EXCEPTIONS
 }

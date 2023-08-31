@@ -10,7 +10,9 @@ import lombok.Data;
 
 import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Author: xiaoxiang
@@ -23,6 +25,9 @@ public class Tag implements Serializable {
     @ApiModelProperty(value = "标签ID", required = true, example = "7072624308312477713")
     @TableId("tag_id")
     private String tagId;
+    @ApiModelProperty(value = "所属用户ID", required = true, example = "7072624308312477713")
+    @TableField("user_id")
+    private String userId;
     @ApiModelProperty(value = "标签名", required = true)
     @TableField("tag_name")
     @NotEmpty(message = "标签名不能为空")
@@ -50,5 +55,8 @@ public class Tag implements Serializable {
     @TableField("update_time")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private Date updateTime;
+    @ApiModelProperty("类别下的标签")
+    @TableField(exist = false)
+    private List<String> sorts = new ArrayList<>();
 }
 

@@ -19,6 +19,11 @@ public class SortTag {
     @ApiModelProperty(value = "类别标签关系ID", required = true, example = "7072624308312477713")
     @TableId("id")
     private String id;
+
+    @ApiModelProperty(value = "用户ID", required = true, example = "7072624308312477713")
+    @TableField("user_id")
+    private String userId;
+
     @ApiModelProperty(value = "类别ID", required = true, example = "7072624308312477713")
     @TableField("sort_id")
     private String sortId;

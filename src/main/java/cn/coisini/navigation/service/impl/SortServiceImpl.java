@@ -8,10 +8,13 @@ import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.model.pojos.Sort;
 import cn.coisini.navigation.model.pojos.SortTag;
 import cn.coisini.navigation.model.pojos.Tag;
+import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.vo.QueryVo;
 import cn.coisini.navigation.model.vo.TagInfoVo;
 import cn.coisini.navigation.service.SortService;
+import cn.coisini.navigation.utils.CheckUserUtil;
 import cn.coisini.navigation.utils.IdWorker;
+import cn.coisini.navigation.utils.UserThreadLocalUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -66,12 +69,16 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         String sortName = queryVo.getKeyword();
         // 封装条件
         QueryWrapper<Sort> wrapper = new QueryWrapper<>();
+        // 获取线程用户
+        User user = UserThreadLocalUtil.getUser();
         // 根据 类别名称 模糊查询
         if (!CharSequenceUtil.isEmpty(sortName)) {
             wrapper.like("sort_name", sortName);
         }
-        // 构建排序条件，首先按 ord 升序排序，然后按创建时间降序排序
-        wrapper.orderByAsc("ord").orderByDesc("create_time");
+        // 根据用户ID获取数据、构建排序条件，首先按 ord 升序排序，然后按创建时间降序排序
+        wrapper.eq("user_id", user.getId())
+                .orderByAsc("ord")
+                .orderByDesc("create_time");
         // 分页条件 当前页-每页条数
         Page<Sort> page = new Page<>(queryVo.getCurrent(), queryVo.getLimit());
         Page<Sort> sortPage = page(page, wrapper);
@@ -86,15 +93,20 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         if (sort.getSortName() == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
         }
+        // 获取线程用户
+        String userId = UserThreadLocalUtil.getUser().getId();
         // 2.查询数据库
-        List<Sort> list = list(Wrappers.lambdaQuery(Sort.class).eq(Sort::getSortName, sort.getSortName()));
-        if (list != null && list.size() == 1) {
+        List<Sort> sortList = list(Wrappers.lambdaQuery(Sort.class)
+                .eq(Sort::getUserId, userId)
+                .eq(Sort::getSortName, sort.getSortName()));
+        if (!sortList.isEmpty()) {
             return Result.error(ResultEnum.DATA_EXIST, "该类别已经添加");
         }
         // 3.检查结果
         IdWorker worker = new IdWorker();
         // 生成分布式ID
         sort.setId(String.valueOf(worker.nextId()));
+        sort.setUserId(userId);
         sort.setCreateTime(new Date());
         boolean b = save(sort);
         if (b) {
@@ -107,8 +119,12 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
     @Override
     public Result<Sort> updateSort(Sort sort) {
         // 1.检查参数
-        if (sort == null && sort.getId() == null) {
+        if (sort == null || sort.getId() == null) {
             return Result.error(ResultEnum.PARAM_INVALID);
+        }
+        // 用户检测
+        if (!CheckUserUtil.checkUser(sort.getUserId())){
+            return Result.error(ResultEnum.NO_OPERATOR_AUTH, "账户异常操作，请退出后重试");
         }
         // 2.修改并检查结果
         boolean b = updateById(sort);
@@ -129,6 +145,10 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         Sort sort = getById(id);
         if (sort == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
+        }
+        // 用户检测
+        if (!CheckUserUtil.checkUser(sort.getUserId())){
+            return Result.error(ResultEnum.NO_OPERATOR_AUTH, "账户异常操作，请退出后重试");
         }
         // 3. 检查类别状态是否有效
         if (Boolean.FALSE.equals(sort.getStatus())) {
@@ -196,6 +216,10 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         if (sort == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
+        // 用户检测
+        if (!CheckUserUtil.checkUser(sort.getUserId())){
+            return Result.error(ResultEnum.NO_OPERATOR_AUTH, "账户异常操作，请退出后重试");
+        }
         // 3. 变更（禁用）类别状态前判断类别下是否有标签关联
         Long countTagBySort = countTagBySort(id);
         if (countTagBySort > 0) {
@@ -238,27 +262,26 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
         // 定义一个标志位flag，默认为false 没有查到类别状态为false的数据
         boolean flag = false;
         // 存储状态为false的类别名称
-        StringBuilder sortNameBuilder = new StringBuilder();
+        List<String> sortNameList = new ArrayList<>();
+
         // 遍历传入的类别数组
         for (Sort sort : sortList) {
+            // 用户检测，检测不通过，就将flag状态进行更改
+            if (!CheckUserUtil.checkUser(sort.getUserId())){
+                flag = true;
+            }
             // 如果类别状态为启用（status 为 false）
-            if (Boolean.FALSE.equals(sort.getStatus())) {
+            if (!sort.getStatus()) {
                 // 设置标志位为 true，表示有未禁用的类别
                 flag = true;
                 // 将未禁用（false状态）的类别名称添加到 StringBuilder 中
-                sortNameBuilder.append(sort.getSortName()).append(", ");
+                sortNameList.add(sort.getSortName());
             }
-        }
-        //  从 StringBuilder 构建的字符串中获取未禁用的类别名称 并去除空格
-        String sortNames = sortNameBuilder.toString().trim();
-        // 去除字符串末尾的逗号
-        if (!sortNames.isEmpty()) {
-            sortNames = sortNames.substring(0, sortNames.length() - 1);
         }
         // 创建一个 Map 用于存储标志位和类别名称
         Map<String, Object> map = new HashMap<>();
         map.put("flag", flag);
-        map.put("sortName", sortNames);
+        map.put("sortName", String.join("，",sortNameList));
         // 返回包含标志位和类别名称的 Map
         return map;
     }
@@ -267,9 +290,8 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
     @Override
     public Result<Object> qbcSortTag() {
         HashMap<String, List<TagInfoVo>> map = new HashMap<>();
-
         QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
-        wrapper.select("distinct sort_id");
+        wrapper.eq("user_id",UserThreadLocalUtil.getUser().getId()).select("distinct sort_id");
         List<SortTag> sortList = sortTagMapper.selectList(wrapper);
 
         List<String> allTagIds = getAllTagIds();
@@ -278,8 +300,8 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
             return Result.ok("暂无标签，快去添加吧~");
         }
 
-        for (Iterator<SortTag> it = sortList.iterator(); it.hasNext(); ) {
-            String sortId = it.next().getSortId();
+        for (SortTag sortTag : sortList) {
+            String sortId = sortTag.getSortId();
             List<String> tagIdList = getTagIdsBySortId(sortId);
             List<TagInfoVo> tagInfoList = getTagInfoListByTagIds(tagIdList);
             String sortName = getSortNameBySortId(sortId);
@@ -326,7 +348,9 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
     // 查询未分配标签的名称
     private List<String> getAllTagIds() {
         QueryWrapper<Tag> tagWrapper = new QueryWrapper<>();
-        tagWrapper.select("tag_id");
+        tagWrapper
+                .eq("user_id",UserThreadLocalUtil.getUser().getId())
+                .select("tag_id");
         List<Tag> allTags = tagMapper.selectList(tagWrapper);
         List<String> allTagIds = new ArrayList<>();
         for (Tag tag : allTags) {
@@ -339,7 +363,9 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
     private List<String> getTagIdsBySortId(String sortId) {
         List<String> tagIds = new ArrayList<>();
         QueryWrapper<SortTag> wrapper = new QueryWrapper<>();
-        wrapper.eq("sort_id", sortId);
+        wrapper
+                .eq("user_id",UserThreadLocalUtil.getUser().getId())
+                .eq("sort_id", sortId);
         List<SortTag> sortTagList = sortTagMapper.selectList(wrapper);
 
         for (SortTag sortTag : sortTagList) {
@@ -352,7 +378,9 @@ public class SortServiceImpl extends ServiceImpl<SortMapper, Sort> implements So
     // 根据sortId查询sortName
     private String getSortNameBySortId(String sortId) {
         QueryWrapper<Sort> sortWrapper = new QueryWrapper<>();
-        sortWrapper.eq("sort_id", sortId);
+        sortWrapper
+                .eq("user_id",UserThreadLocalUtil.getUser().getId())
+                .eq("sort_id", sortId);
         Sort sort = sortMapper.selectOne(sortWrapper);
 
         if (sort != null) {
