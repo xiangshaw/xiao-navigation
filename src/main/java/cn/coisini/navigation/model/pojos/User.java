@@ -62,6 +62,10 @@ public class User implements Serializable {
     @JsonFormat(shape = JsonFormat.Shape.STRING , pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     @ApiModelProperty("更新时间")
     private Date updateTime;
+    @TableField("login_time")
+    @JsonFormat(shape = JsonFormat.Shape.STRING , pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
+    @ApiModelProperty("登录时间")
+    private Date loginTime;
 
     @TableField("del_flag")
     @ApiModelProperty("删除标记（0可用 1已删除）")

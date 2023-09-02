@@ -2,6 +2,7 @@ package cn.coisini.navigation.config;
 
 
 import cn.coisini.navigation.common.log.service.AsyncLoginLogService;
+import cn.coisini.navigation.mapper.UserMapper;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.security.MyUserDetailsServiceImpl;
@@ -46,12 +47,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
     private final StringRedisTemplate stringRedisTemplate;
     private final AsyncLoginLogService asyncLoginLogService;
+    private final UserMapper userMapper;
 
-    public SecurityConfig(MyUserDetailsServiceImpl myUserDetailService, TokenAuthenticationFilter tokenAuthenticationFilter, StringRedisTemplate stringRedisTemplate, AsyncLoginLogService asyncLoginLogService) {
+    public SecurityConfig(MyUserDetailsServiceImpl myUserDetailService, TokenAuthenticationFilter tokenAuthenticationFilter, StringRedisTemplate stringRedisTemplate, AsyncLoginLogService asyncLoginLogService, UserMapper userMapper) {
         this.myUserDetailService = myUserDetailService;
         this.tokenAuthenticationFilter = tokenAuthenticationFilter;
         this.stringRedisTemplate = stringRedisTemplate;
         this.asyncLoginLogService = asyncLoginLogService;
+        this.userMapper = userMapper;
     }
 
     @Bean
@@ -100,7 +103,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // 添加JWT filter
         httpSecurity.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         // 自定义登录校验
-        httpSecurity.addFilter(new TokenLoginFilter(authenticationManager(), stringRedisTemplate, asyncLoginLogService));
+        httpSecurity.addFilter(new TokenLoginFilter(authenticationManager(), stringRedisTemplate, asyncLoginLogService, userMapper));
         //添加自定义未授权和未登录结果返回
         httpSecurity.exceptionHandling()
                 .accessDeniedHandler(new RestfulAccessDeniedHandler())

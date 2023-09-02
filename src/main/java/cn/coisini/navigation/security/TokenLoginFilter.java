@@ -2,13 +2,16 @@ package cn.coisini.navigation.security;
 
 import cn.coisini.navigation.common.exception.CoisiniException;
 import cn.coisini.navigation.common.log.service.AsyncLoginLogService;
+import cn.coisini.navigation.mapper.UserMapper;
 import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.common.enums.ResultEnum;
+import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.vo.LoginVo;
 import cn.coisini.navigation.utils.IpUtils;
 import cn.coisini.navigation.utils.JwtUtil;
 import cn.hutool.core.text.CharSequenceUtil;
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -25,6 +28,7 @@ import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,12 +40,14 @@ import java.util.Map;
 public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
     private final StringRedisTemplate stringRedisTemplate;
     private final AsyncLoginLogService asyncLoginLogService;
+    private final UserMapper userMapper;
 
     // 构造
     public TokenLoginFilter(
             AuthenticationManager authenticationManager,
-            StringRedisTemplate stringRedisTemplate, AsyncLoginLogService asyncLoginLogService) {
+            StringRedisTemplate stringRedisTemplate, AsyncLoginLogService asyncLoginLogService, UserMapper userMapper) {
         this.asyncLoginLogService = asyncLoginLogService;
+        this.userMapper = userMapper;
         this.setAuthenticationManager(authenticationManager);
         this.setPostOnly(false);
         //指定登录接口及提交方式，可以指定任意路径
@@ -89,24 +95,43 @@ public class TokenLoginFilter extends UsernamePasswordAuthenticationFilter {
         stringRedisTemplate.opsForValue().set(customUser.getUsername(),
                 JSON.toJSONString(customUser.getAuthorities()));
         // 生成token
-        String token = JwtUtil.getToken(customUser.getUser().getId(), customUser.getUser().getUsername());
+        String id = customUser.getUser().getId();
+        String token = JwtUtil.getToken(id, customUser.getUser().getUsername());
         Map<String, Object> map = new HashMap<>();
         map.put("token", token);
         out(response, Result.ok(map));
+        // 更新登录时间
+        updateLoginTime(id);
         // 记录登录日志
+        recordLoginLog(request, token);
+    }
+    // 更新登录时间
+    private void updateLoginTime(String userId) {
+        User user = new User();
+        user.setId(userId);
+        user.setLoginTime(new Date());
+        UpdateWrapper<User> wrapper = new UpdateWrapper<>();
+        wrapper.eq("id", userId);
+        int updateUserLoginTime = userMapper.update(user, wrapper);
+        if (updateUserLoginTime != 1) {
+            // 更新失败，可能是用户不存在或其他原因
+            logger.error("更新登录时间失败: {}" + userId);
+            // 抛出异常或记录日志，根据实际需求决定如何处理
+            throw new RuntimeException("更新登录时间失败");
+        }
+    }
+    private void recordLoginLog(HttpServletRequest request, String token) {
         try {
-            asyncLoginLogService.recordLoginLog(JwtUtil.getUserId(token),
-                    JwtUtil.getUsername(token),
-                    false,
-                    IpUtils.getIp(request), IpUtils.getIp2region(IpUtils.getIp(request)),
-                    IpUtils.getCityInfo(IpUtils.getIp(request)),
-                    "登录成功");
+            String userId = JwtUtil.getUserId(token);
+            String username = JwtUtil.getUsername(token);
+            String ip = IpUtils.getIp(request);
+            String ip2region = IpUtils.getIp2region(ip);
+            String cityInfo = IpUtils.getCityInfo(ip);
+
+            asyncLoginLogService.recordLoginLog(userId, username, false, ip, ip2region, cityInfo, "登录成功");
         } catch (Exception e) {
-            asyncLoginLogService.recordLoginLog(null, request.getParameter("username"),
-                    false,
-                   null, null,
-                    null,
-                    String.valueOf(e));
+            String errorMessage = String.valueOf(e);
+            asyncLoginLogService.recordLoginLog(null, request.getParameter("username"), false, null, null, null, errorMessage);
             logger.error("记录登录日志出错！", e);
         }
     }

@@ -9,10 +9,7 @@ import cn.coisini.navigation.model.common.enums.ResultEnum;
 import cn.coisini.navigation.model.pojos.Role;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
-import cn.coisini.navigation.model.vo.AssginRoleVo;
-import cn.coisini.navigation.model.vo.RegisterUserVo;
-import cn.coisini.navigation.model.vo.RouterVo;
-import cn.coisini.navigation.model.vo.UserQueryVo;
+import cn.coisini.navigation.model.vo.*;
 import cn.coisini.navigation.service.MenuService;
 import cn.coisini.navigation.service.UserService;
 import cn.coisini.navigation.utils.FastDfsClient;
@@ -99,7 +96,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     // 根据Id获取用户
     @Override
-    public Result<User> getUserId(String id) {
+    public Result<UserInfoVo> getUserId(String id) {
         if (id == null) {
             return Result.error(ResultEnum.PARAM_REQUIRE);
         }
@@ -107,7 +104,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
-        return Result.ok(user);
+        // 用户信息赋值
+        Result<UserInfoVo> result = new Result<>();
+        result.setData(assignmentUserInfo(user));
+        result.setHost(fileServerUrl);
+        return result;
     }
 
     // 保存用户
@@ -202,7 +203,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         // 查询用户是否存在
         User user = getById(id);
-        if (user == null){
+        if (user == null) {
             // 首次提交
             return Result.ok("头像添加成功~");
         }
@@ -214,6 +215,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         wrapper.set("avatar", avatar);
         baseMapper.update(user, wrapper);
         return Result.ok(ResultEnum.SUCCESS);
+    }
+
+    // 用户修改个人信息
+    @Override
+    public Result<UserInfoVo> updateUserInfo(UserInfoVo userInfoVo) {
+        if (userInfoVo == null || userInfoVo.getId() == null) {
+            return Result.error(ResultEnum.PARAM_INVALID);
+        }
+        User user = new User();
+        user.setNickname(userInfoVo.getNickname());
+        user.setPhone(userInfoVo.getPhone());
+        user.setAvatar(userInfoVo.getAvatar());
+        user.setDescription(userInfoVo.getDescription());
+        QueryWrapper<User> wrapper = new QueryWrapper<>();
+        wrapper.eq("id", userInfoVo.getId());
+        int result = baseMapper.update(user, wrapper);
+        if (result > 0) {
+            return Result.ok(ResultEnum.SUCCESS);
+        }
+        return Result.error(ResultEnum.FAIL, "信息修改失败~");
     }
 
     // 获取用户id获取角色数据
@@ -281,6 +302,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         List<String> permsList = menuService.findUserButtonList(userId);
         // 根据用户id查询信息
         String avatar = baseMapper.selectById(userId).getAvatar();
+        map.put("userId", userId);
         map.put("name", username);
         map.put("avatar", fileServerUrl + avatar);
         // 菜单权限数据
@@ -309,10 +331,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setPassword(registerUserVo.getPassword());
         user.setPhone(registerUserVo.getPhone());
         Result<User> userResult = saveUser(user);
-        if (userResult.getCode() == 200){
+        if (userResult.getCode() == 200) {
             return Result.ok(userResult.getmessage());
         }
-        return Result.error(ResultEnum.FAIL,userResult.getmessage());
+        return Result.error(ResultEnum.FAIL, userResult.getmessage());
     }
 
     // 删除头像
@@ -325,5 +347,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         } else {
             return avatar;
         }
+    }
+
+    // 用户信息赋值
+    private UserInfoVo assignmentUserInfo(User user) {
+        UserInfoVo vo = new UserInfoVo();
+        vo.setId(user.getId());
+        vo.setUsername(user.getUsername());
+        vo.setNickname(user.getNickname());
+        vo.setPhone(user.getPhone());
+        vo.setAvatar(user.getAvatar());
+        vo.setDescription(user.getDescription());
+        vo.setStatus(user.getStatus());
+        vo.setCreateTime(user.getCreateTime());
+        vo.setDelFlag(user.getDelFlag());
+        return vo;
     }
 }

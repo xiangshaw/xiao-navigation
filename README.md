@@ -16,7 +16,8 @@
 标签导航
 
 
-技术整合:
+技术整合: 
+项目搭建 基于 Spring Boot 2.6.13 + Mybatis Plus + Redis + FastDfs
 
 效果图参考前端 [xiao-navigation-admin](https://github.com/xiangshaw/xiao-navigation-admin)：[Gitee](https://gitee.com/xiangshaw/xiao-navigation-admin) [GitHub](https://github.com/xiangshaw/xiao-navigation-admin)
 - [√] 类别管理
@@ -27,5 +28,7 @@
 - [√] 用户与角色关系
 - [√] 角色与菜单关系
 - [√] 标签图标上传，首页设计
+- [√] 登录、操作日志记录
+- [√] 用户与图标、类别的关系
 
 项目开发中，敬请期待~

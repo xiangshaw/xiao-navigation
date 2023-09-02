@@ -6,6 +6,7 @@ import cn.coisini.navigation.model.common.dto.Result;
 import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
 import cn.coisini.navigation.model.vo.AssginRoleVo;
+import cn.coisini.navigation.model.vo.UserInfoVo;
 import cn.coisini.navigation.model.vo.UserQueryVo;
 import cn.coisini.navigation.service.UserService;
 import io.swagger.annotations.Api;
@@ -40,7 +41,7 @@ public class UserController {
 
     @ApiOperation("根据id获取用户")
     @GetMapping("/findUserById/{id}")
-    public Result<User> getUserId(@PathVariable("id") String id) {
+    public Result<UserInfoVo> getUserId(@PathVariable("id") String id) {
         return userService.getUserId(id);
     }
 
@@ -82,6 +83,13 @@ public class UserController {
     Result<User> updateUserAvatar(@PathVariable("id") String id,
                               @PathVariable("avatar") String avatar) {
         return userService.updateUserAvatar(id, avatar);
+    }
+
+    @PatchMapping("/updateUserInfo")
+    @Log(title = "用户管理", businessType = BusinessType.UPDATE)
+    @ApiOperation("用户修改资料")
+    public Result<UserInfoVo> updateUserInfo(@RequestBody UserInfoVo userInfoVo){
+        return userService.updateUserInfo(userInfoVo);
     }
 
     @ApiOperation("根据用户id获取角色信息数据")

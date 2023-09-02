@@ -5,6 +5,7 @@ import cn.coisini.navigation.model.pojos.User;
 import cn.coisini.navigation.model.pojos.UserRole;
 import cn.coisini.navigation.model.vo.AssginRoleVo;
 import cn.coisini.navigation.model.vo.RegisterUserVo;
+import cn.coisini.navigation.model.vo.UserInfoVo;
 import cn.coisini.navigation.model.vo.UserQueryVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -19,7 +20,7 @@ public interface UserService extends IService<User> {
     Result<Object> pagingQuery(UserQueryVo userQueryVo);
 
     // 根据id获取用户
-    Result<User> getUserId(String id);
+    Result<UserInfoVo> getUserId(String id);
 
     // 保存用户
     Result<User> saveUser(User user);
@@ -36,6 +37,9 @@ public interface UserService extends IService<User> {
 
     // 单头像修改后 更新操作
     Result<User> updateUserAvatar(String id, String userAvatar);
+
+    // 用户修改个人信息
+    Result<UserInfoVo> updateUserInfo(UserInfoVo userInfoVo);
 
     // ---用户 角色 关系---
     // 根据用户id获取角色信息
