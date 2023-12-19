@@ -52,7 +52,7 @@ public class FileController {
 
     }
 
-    @Log(title = "上传管理",businessType = BusinessType.DELETE)
+    @Log(title = "删除管理",businessType = BusinessType.DELETE)
     @GetMapping("/fastdfs/remove")
     public Result<String> delFile(String fileId) {
         // /fastdfs/remove?fileId=group1/M00/00/00/wKgUgGTdAg-AKc1bAALxXtyM8xw319.ico
@@ -62,6 +62,18 @@ public class FileController {
         } catch (Exception e) {
             e.printStackTrace();
             return Result.error(ResultEnum.FAIL, "删除失败");
+        }
+    }
+
+    @Log(title = "下载管理",businessType = BusinessType.EXPORT)
+    @GetMapping("/fastdfs/download")
+    public Result<String> downloadFile(String fileId) {
+        try {
+            fastDfsClient.downLoadFile(fileId);
+            return Result.ok("下载成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error(ResultEnum.FAIL, "下载失败");
         }
     }
 }
