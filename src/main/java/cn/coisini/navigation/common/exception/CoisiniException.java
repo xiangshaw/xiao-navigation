@@ -61,7 +61,7 @@ public class CoisiniException extends RuntimeException {
 
     @Override
     public String toString() {
-        return "AxzException{" +
+        return "CoisiniException{" +
                 "code=" + code +
                 ", message=" + this.getMessage() +
                 '}';

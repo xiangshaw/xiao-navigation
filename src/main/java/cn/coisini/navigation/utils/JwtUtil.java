@@ -25,15 +25,24 @@ public class JwtUtil {
         claimMaps.put("username",username);
         long currentTime = System.currentTimeMillis();
         return Jwts.builder()
-                .setId(UUID.randomUUID().toString())//设置id
-                .setIssuedAt(new Date(currentTime))  //签发时间
-                .setSubject("system")  //说明
-                .setIssuer("coisini") //签发者信息
-                .setAudience("all")  //接收用户
-                .compressWith(CompressionCodecs.GZIP)  //数据压缩方式
-                .signWith(SignatureAlgorithm.HS512, generalKey()) //加密方式
-                .setExpiration(new Date(currentTime + TOKEN_TIME_OUT * 1000))  //过期时间戳
-                .addClaims(claimMaps) //cla信息(手动设置的内容)
+                //设置id
+                .setId(UUID.randomUUID().toString())
+                //签发时间
+                .setIssuedAt(new Date(currentTime))
+                //说明
+                .setSubject("system")
+                //签发者信息
+                .setIssuer("coisini")
+                //接收用户
+                .setAudience("all")
+                //数据压缩方式
+                .compressWith(CompressionCodecs.GZIP)
+                //加密方式
+                .signWith(SignatureAlgorithm.HS512, generalKey())
+                //过期时间戳
+                .setExpiration(new Date(currentTime + TOKEN_TIME_OUT * 1000))
+                //cla信息(手动设置的内容)
+                .addClaims(claimMaps)
                 .compact();
     }
 

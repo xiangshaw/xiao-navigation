@@ -28,7 +28,7 @@ public class AsyncLoginLogController {
     @ApiOperation("条件分页查询登录日志")
     @PreAuthorize("hasAuthority('loginLog.list')")
     @GetMapping("/list")
-    public Result<AsyncLoginLog> pagingQuery(AsyncLoginLogQueryVo asyncLoginLogQueryVo) {
+    public Result<AsyncLoginLog> pagingQuery(@RequestBody AsyncLoginLogQueryVo asyncLoginLogQueryVo) {
         return asyncLoginLogService.pagingQuery(asyncLoginLogQueryVo);
     }
 

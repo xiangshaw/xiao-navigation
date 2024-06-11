@@ -1,7 +1,6 @@
 package cn.coisini.navigation;
 
 import cn.coisini.navigation.utils.IdWorker;
-import cn.hutool.core.text.CharSequenceUtil;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import org.springframework.beans.BeansException;
@@ -39,14 +38,12 @@ public class NavigationApplication {
         Environment environment = context.getBean(Environment.class);
         //environment.getProperty("server.servlet.context-path") 应用的上下文路径，也可以称为项目路径
         // 获取当前IP
-//        String host = InetAddress.getLocalHost().getHostAddress();
+        // String host = InetAddress.getLocalHost().getHostAddress();
         String name = environment.getProperty("spring.application.name");
         String host = environment.getProperty("ipaddr");
         String port = environment.getProperty("server.port");
-        String path = environment.getProperty("server.servlet.context-path");
-        if (CharSequenceUtil.isEmpty(path)) {
-            path = "";
-        }
+        String path = environment.getProperty("server.servlet.context-path","");
+
         System.out.println("\n启动成功~ 欢迎使用：" + name);
         System.out.println("\n访问地址：" + host + ":" + port + path);
         System.out.println("\n接口文档地址：" + host + ":" + port + path + "/doc.html");

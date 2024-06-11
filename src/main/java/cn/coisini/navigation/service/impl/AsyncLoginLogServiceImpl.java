@@ -101,7 +101,7 @@ public class AsyncLoginLogServiceImpl extends ServiceImpl<AsyncLoginLogMapper, A
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
         removeById(id);
-        return Result.error(ResultEnum.SUCCESS);
+        return Result.ok(ResultEnum.SUCCESS);
     }
 
     // 批量删除登录日志
@@ -117,6 +117,6 @@ public class AsyncLoginLogServiceImpl extends ServiceImpl<AsyncLoginLogMapper, A
             return Result.error(ResultEnum.DATA_NOT_EXIST);
         }
         removeByIds(ids);
-        return Result.error(ResultEnum.SUCCESS);
+        return Result.ok(ResultEnum.SUCCESS);
     }
 }
