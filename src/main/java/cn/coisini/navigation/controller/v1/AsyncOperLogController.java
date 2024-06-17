@@ -31,7 +31,7 @@ public class AsyncOperLogController {
     @PreAuthorize("hasAuthority('operLog.list')")
     @GetMapping("/list")
     public Result<AsyncOperLog> pagingQuery(
-           @RequestBody AsyncOperLogQueryVo asyncOperLogQueryVo) {
+            AsyncOperLogQueryVo asyncOperLogQueryVo) {
         return asyncOperLogService.pagingQuery(asyncOperLogQueryVo);
     }
 

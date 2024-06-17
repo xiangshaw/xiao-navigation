@@ -35,7 +35,7 @@ public class UserController {
     @PreAuthorize("hasAuthority('user:list')")
     @ApiOperation("用户列表")
     @GetMapping("/list")
-    public Result<Object> pagingQuery(@RequestBody UserQueryVo userQueryVo) {
+    public Result<Object> pagingQuery(UserQueryVo userQueryVo) {
         return userService.pagingQuery(userQueryVo);
     }
 
