@@ -69,7 +69,7 @@ public class SortController {
     @Log(title = "类别管理",businessType = BusinessType.BATCH_REMOVE)
     @ApiOperation("批量删除类别")
     @DeleteMapping("/batchRemove")
-    public Result<List<Sort>> batchRemoveRole(@RequestBody List<String> ids) {
+    public Result<List<Sort>> batchRemoveRole(List<String> ids) {
         return sortService.batchRemove(ids);
     }
 

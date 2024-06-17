@@ -53,7 +53,7 @@ public class AsyncOperLogController {
     @PreAuthorize("hasAuthority('operLog.batchRemove')")
     @Log(title = "操作日志管理",businessType = BusinessType.BATCH_REMOVE)
     @DeleteMapping("/batchRemove")
-    public Result<AsyncOperLog> batchRemove(@RequestBody List<String> ids) {
+    public Result<AsyncOperLog> batchRemove(List<String> ids) {
         return asyncOperLogService.batchRemove(ids);
     }
 }
