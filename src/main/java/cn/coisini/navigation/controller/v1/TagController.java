@@ -73,7 +73,7 @@ public class TagController {
     @Log(title = "标签管理",businessType = BusinessType.BATCH_REMOVE)
     @ApiOperation("批量删除标签")
     @DeleteMapping("/batchRemove")
-    public Result<List<Tag>> batchRemoveRole(List<String> ids) {
+    public Result<List<Tag>> batchRemoveRole(@RequestBody List<String> ids) {
         return tagService.batchRemove(ids);
     }
 

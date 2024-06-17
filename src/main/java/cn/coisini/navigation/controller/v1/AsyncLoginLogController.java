@@ -50,7 +50,7 @@ public class AsyncLoginLogController {
     @PreAuthorize("hasAuthority('loginLog.batchRemove')")
     @Log(title = "登录日志管理",businessType = BusinessType.BATCH_REMOVE)
     @DeleteMapping("/batchRemove")
-    public Result<AsyncLoginLog> batchRemove(List<String> ids) {
+    public Result<AsyncLoginLog> batchRemove(@RequestBody List<String> ids) {
         return asyncLoginLogService.batchRemove(ids);
     }
 }

@@ -74,7 +74,7 @@ public class RoleController {
     @ApiOperation("批量删除角色")
     @Log(title = "角色管理",businessType = BusinessType.BATCH_REMOVE)
     @DeleteMapping("/batchRemove")
-    public Result<List<Role>> batchRemoveRole(List<String> ids) {
+    public Result<List<Role>> batchRemoveRole(@RequestBody List<String> ids) {
         return roleService.batchRemove(ids);
     }
 }
